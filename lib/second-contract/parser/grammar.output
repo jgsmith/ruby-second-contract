@@ -1,0 +1,2242 @@
+state 0 contains 6 shift/reduce conflicts
+state 28 contains 1 shift/reduce conflicts
+state 29 contains 1 shift/reduce conflicts
+state 31 contains 4 shift/reduce conflicts
+state 39 contains 1 shift/reduce conflicts
+state 42 contains 2 shift/reduce conflicts
+state 43 contains 3 reduce/reduce conflicts
+state 68 contains 1 shift/reduce conflicts
+state 85 contains 1 shift/reduce conflicts
+state 120 contains 1 shift/reduce conflicts
+state 125 contains 3 shift/reduce conflicts
+state 139 contains 1 shift/reduce conflicts
+state 139 contains 1 reduce/reduce conflicts
+state 151 contains 2 shift/reduce conflicts
+
+
+-------- Grammar --------
+
+rule 1 sentence: commands
+rule 2 sentence: commands STRING
+rule 3 sentence: communication
+rule 4 sentence: adverbs communication STRING adverbs
+rule 5 sentence: adverbs communication topic
+rule 6 commands: adverbs command
+rule 7 commands: commands and_then adverbs command
+rule 8 and_then: THEN
+rule 9 and_then: AND_THEN
+rule 10 command: ttv
+rule 11 command: btv
+rule 12 command: tv
+rule 13 command: verb_only
+rule 14 communication: comm
+rule 15 comm_verb_only: COMM_VERB adverbs
+rule 16 comm_language: IN LANGUAGE adverbs
+rule 17 comm_target: indirect_noun_phrase adverbs
+rule 18 comm: comm_verb_only
+rule 19 comm: comm_verb_only comm_language
+rule 20 comm: comm_verb_only comm_target
+rule 21 comm: comm_verb_only comm_language comm_target
+rule 22 comm: comm_verb_only comm_target comm_language
+rule 23 comm: comm_language comm_verb_only
+rule 24 comm: comm_language comm_verb_only comm_target
+rule 25 comm: comm_language comm_target comm_verb_only
+rule 26 comm: comm_target comm_verb_only
+rule 27 comm: comm_target comm_verb_only comm_language
+rule 28 comm: comm_target comm_language comm_verb_only
+rule 29 topic: topic_intro words
+rule 30 topic_intro: ABOUT
+rule 31 topic_intro: THAT
+rule 32 verb_only: VERB adverbs
+rule 33 verb_only: movement_verb_only
+rule 34 movement_verb_only: MOVEMENT_VERB adverbs
+rule 35 tv: verb_only dnp
+rule 36 tv: dnp verb_only
+rule 37 btv: verb_only indirect_noun_phrase dnp
+rule 38 btv: tv indirect_noun_phrase
+rule 39 btv: dnp indirect_noun_phrase verb_only
+rule 40 btv: indirect_noun_phrase tv
+rule 41 btv: movement_verb_only indirect_noun_phrase
+rule 42 btv: indirect_noun_phrase movement_verb_only
+rule 43 ttv: btv instrument_noun_phrase
+rule 44 ttv: instrument_noun_phrase btv
+rule 45 ttv: verb_only indirect_noun_phrase instrument_noun_phrase dnp
+rule 46 ttv: tv instrument_noun_phrase indirect_noun_phrase
+rule 47 ttv: dnp instrument_noun_phrase indirect_noun_phrase verb_only
+rule 48 ttv: indirect_noun_phrase instrument_noun_phrase tv
+rule 49 adverbs: 
+rule 50 adverbs: adverbs opt_and ADVERB
+rule 51 opt_and: 
+rule 52 opt_and: AND
+rule 53 word: WORD
+rule 54 word: FRONT
+rule 55 word: LANGUAGE
+rule 56 words: word
+rule 57 words: words word
+rule 58 instrument_preposition: WITH
+rule 59 instrument_preposition: USING
+rule 60 instrument_preposition: IN
+rule 61 rel_preposition: IN
+rule 62 rel_preposition: ON
+rule 63 rel_preposition: AGAINST
+rule 64 rel_preposition: CLOSE
+rule 65 rel_preposition: CLOSE TO
+rule 66 rel_preposition: UNDER
+rule 67 rel_preposition: NEAR
+rule 68 rel_preposition: OVER
+rule 69 rel_preposition: BEHIND
+rule 70 rel_preposition: BEFORE
+rule 71 rel_preposition: IN FRONT OF
+rule 72 rel_preposition: BESIDE
+rule 73 rel_preposition: CONTAINING
+rule 74 rel_preposition: HOLDING
+rule 75 rel_preposition: WITH
+rule 76 rel_preposition: GUARDING
+rule 77 rel_preposition: BLOCKING
+rule 78 indirect_preposition: FROM
+rule 79 indirect_preposition: TO
+rule 80 indirect_preposition: AT
+rule 81 indirect_preposition: THROUGH
+rule 82 indirect_preposition: FROM rel_preposition
+rule 83 indirect_preposition: TO rel_preposition
+rule 84 dnp: objects adverbs
+rule 85 indirect_noun_phrase: indirect_preposition objects adverbs
+rule 86 instrument_noun_phrase: instrument_preposition objects adverbs
+rule 87 noun_phrase: opt_quantifier words
+rule 88 objects: noun
+rule 89 objects: objects conjunction noun
+rule 90 noun: ALL
+rule 91 noun: noun_phrase
+rule 92 noun: noun rel_preposition noun_phrase
+rule 93 conjunction: AND
+rule 94 article: THE
+rule 95 article: A
+rule 96 article: AN
+rule 97 article: ANY
+rule 98 article: MY
+rule 99 article: HER
+rule 100 article: HIS
+rule 101 article: ITS
+rule 102 article: THEIR
+rule 103 quantifier: article
+rule 104 quantifier: article NUMBER
+rule 105 quantifier: NUMBER
+rule 106 quantifier: ALL
+rule 107 quantifier: fraction
+rule 108 quantifiers: quantifier
+rule 109 quantifiers: quantifiers OF quantifier
+rule 110 opt_quantifier: 
+rule 111 opt_quantifier: quantifiers
+rule 112 fraction: NUMBER SLASH NUMBER
+
+------- Symbols -------
+
+**Nonterminals, with rules where they appear
+
+  $start (48)
+    on right: 
+    on left : 
+  sentence (49)
+    on right: 
+    on left : 1 2 3 4 5
+  commands (50)
+    on right: 1 2 7
+    on left : 6 7
+  communication (51)
+    on right: 3 4 5
+    on left : 14
+  adverbs (52)
+    on right: 4 5 6 7 15 16 17 32 34 50 84 85 86
+    on left : 49 50
+  topic (53)
+    on right: 5
+    on left : 29
+  command (54)
+    on right: 6 7
+    on left : 10 11 12 13
+  and_then (55)
+    on right: 7
+    on left : 8 9
+  ttv (56)
+    on right: 10
+    on left : 43 44 45 46 47 48
+  btv (57)
+    on right: 11 43 44
+    on left : 37 38 39 40 41 42
+  tv (58)
+    on right: 12 38 40 46 48
+    on left : 35 36
+  verb_only (59)
+    on right: 13 35 36 37 39 45 47
+    on left : 32 33
+  comm (60)
+    on right: 14
+    on left : 18 19 20 21 22 23 24 25 26 27 28
+  comm_verb_only (61)
+    on right: 18 19 20 21 22 23 24 25 26 27 28
+    on left : 15
+  comm_language (62)
+    on right: 19 21 22 23 24 25 27 28
+    on left : 16
+  comm_target (63)
+    on right: 20 21 22 24 25 26 27 28
+    on left : 17
+  indirect_noun_phrase (64)
+    on right: 17 37 38 39 40 41 42 45 46 47 48
+    on left : 85
+  topic_intro (65)
+    on right: 29
+    on left : 30 31
+  words (66)
+    on right: 29 57 87
+    on left : 56 57
+  movement_verb_only (67)
+    on right: 33 41 42
+    on left : 34
+  dnp (68)
+    on right: 35 36 37 39 45 47
+    on left : 84
+  instrument_noun_phrase (69)
+    on right: 43 44 45 46 47 48
+    on left : 86
+  opt_and (70)
+    on right: 50
+    on left : 51 52
+  word (71)
+    on right: 56 57
+    on left : 53 54 55
+  instrument_preposition (72)
+    on right: 86
+    on left : 58 59 60
+  rel_preposition (73)
+    on right: 82 83 92
+    on left : 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77
+  indirect_preposition (74)
+    on right: 85
+    on left : 78 79 80 81 82 83
+  objects (75)
+    on right: 84 85 86 89
+    on left : 88 89
+  noun_phrase (76)
+    on right: 91 92
+    on left : 87
+  opt_quantifier (77)
+    on right: 87
+    on left : 110 111
+  noun (78)
+    on right: 88 89 92
+    on left : 90 91 92
+  conjunction (79)
+    on right: 89
+    on left : 93
+  article (80)
+    on right: 103 104
+    on left : 94 95 96 97 98 99 100 101 102
+  quantifier (81)
+    on right: 108 109
+    on left : 103 104 105 106 107
+  fraction (82)
+    on right: 107
+    on left : 112
+  quantifiers (83)
+    on right: 109 111
+    on left : 108 109
+
+**Terminals, with rules where they appear
+
+  $end (0) 
+  error (1) 
+  SLASH (2) 112
+  LANGUAGE (3) 16 55
+  ADVERB (4) 50
+  VERB (5) 32
+  COMM_VERB (6) 15
+  WORD (7) 53
+  STRING (8) 2 4
+  NUMBER (9) 104 105 112
+  MOVEMENT_VERB (10) 34
+  ABOUT (11) 30
+  AND (12) 52 93
+  A (13) 95
+  AN (14) 96
+  ANY (15) 97
+  ALL (16) 90 106
+  AGAINST (17) 63
+  AT (18) 80
+  BEHIND (19) 69
+  BEFORE (20) 70
+  BESIDE (21) 72
+  BLOCKING (22) 77
+  CLOSE (23) 64 65
+  CONTAINING (24) 73
+  FRONT (25) 54 71
+  FROM (26) 78 82
+  GUARDING (27) 76
+  HOLDING (28) 74
+  HER (29) 99
+  HIS (30) 100
+  IN (31) 16 60 61 71
+  ITS (32) 101
+  MY (33) 98
+  NEAR (34) 67
+  OF (35) 71 109
+  ON (36) 62
+  OVER (37) 68
+  THEN (38) 8
+  TO (39) 65 79 83
+  THAT (40) 31
+  THROUGH (41) 81
+  THE (42) 94
+  THEIR (43) 102
+  USING (44) 59
+  UNDER (45) 66
+  WITH (46) 58 75
+  AND_THEN (47) 9
+
+--------- State ---------
+
+state 0
+
+
+  COMM_VERB     shift, and go to state 6
+  COMM_VERB     [reduce using rule 49 (adverbs)]
+  AT            shift, and go to state 14
+  AT            [reduce using rule 49 (adverbs)]
+  FROM          shift, and go to state 12
+  FROM          [reduce using rule 49 (adverbs)]
+  IN            shift, and go to state 7
+  IN            [reduce using rule 49 (adverbs)]
+  TO            shift, and go to state 13
+  TO            [reduce using rule 49 (adverbs)]
+  THROUGH       shift, and go to state 15
+  THROUGH       [reduce using rule 49 (adverbs)]
+  $default      reduce using rule 49 (adverbs)
+
+  sentence      go to state 1
+  commands      go to state 2
+  communication  go to state 3
+  adverbs       go to state 4
+  comm          go to state 5
+  indirect_noun_phrase  go to state 8
+  comm_verb_only  go to state 9
+  comm_language  go to state 10
+  comm_target   go to state 11
+  indirect_preposition  go to state 16
+
+state 1
+
+
+  $end          shift, and go to state 17
+
+
+state 2
+
+   1) sentence : commands _
+   2) sentence : commands _ STRING
+   7) commands : commands _ and_then adverbs command
+
+  STRING        shift, and go to state 18
+  THEN          shift, and go to state 20
+  AND_THEN      shift, and go to state 21
+  $default      reduce using rule 1 (sentence)
+
+  and_then      go to state 19
+
+state 3
+
+   3) sentence : communication _
+
+  $default      reduce using rule 3 (sentence)
+
+
+state 4
+
+   4) sentence : adverbs _ communication STRING adverbs
+   5) sentence : adverbs _ communication topic
+   6) commands : adverbs _ command
+  50) adverbs : adverbs _ opt_and ADVERB
+
+  VERB          shift, and go to state 30
+  COMM_VERB     shift, and go to state 6
+  NUMBER        shift, and go to state 55
+  MOVEMENT_VERB  shift, and go to state 32
+  AND           shift, and go to state 36
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  IN            shift, and go to state 28
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  USING         shift, and go to state 38
+  WITH          shift, and go to state 37
+  ADVERB        reduce using rule 51 (opt_and)
+  $default      reduce using rule 110 (opt_quantifier)
+
+  communication  go to state 22
+  command       go to state 23
+  ttv           go to state 24
+  btv           go to state 25
+  tv            go to state 26
+  verb_only     go to state 27
+  comm          go to state 5
+  indirect_noun_phrase  go to state 29
+  comm_verb_only  go to state 9
+  comm_language  go to state 10
+  comm_target   go to state 11
+  movement_verb_only  go to state 31
+  dnp           go to state 33
+  instrument_noun_phrase  go to state 34
+  opt_and       go to state 35
+  objects       go to state 39
+  indirect_preposition  go to state 16
+  instrument_preposition  go to state 40
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 5
+
+  14) communication : comm _
+
+  $default      reduce using rule 14 (communication)
+
+
+state 6
+
+  15) comm_verb_only : COMM_VERB _ adverbs
+
+  $default      reduce using rule 49 (adverbs)
+
+  adverbs       go to state 59
+
+state 7
+
+  16) comm_language : IN _ LANGUAGE adverbs
+
+  LANGUAGE      shift, and go to state 60
+
+
+state 8
+
+  17) comm_target : indirect_noun_phrase _ adverbs
+
+  $default      reduce using rule 49 (adverbs)
+
+  adverbs       go to state 61
+
+state 9
+
+  18) comm : comm_verb_only _
+  19) comm : comm_verb_only _ comm_language
+  20) comm : comm_verb_only _ comm_target
+  21) comm : comm_verb_only _ comm_language comm_target
+  22) comm : comm_verb_only _ comm_target comm_language
+
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  IN            shift, and go to state 7
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+  $default      reduce using rule 18 (comm)
+
+  indirect_noun_phrase  go to state 8
+  comm_language  go to state 62
+  comm_target   go to state 63
+  indirect_preposition  go to state 16
+
+state 10
+
+  23) comm : comm_language _ comm_verb_only
+  24) comm : comm_language _ comm_verb_only comm_target
+  25) comm : comm_language _ comm_target comm_verb_only
+
+  COMM_VERB     shift, and go to state 6
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+
+  indirect_noun_phrase  go to state 8
+  comm_verb_only  go to state 64
+  comm_target   go to state 65
+  indirect_preposition  go to state 16
+
+state 11
+
+  26) comm : comm_target _ comm_verb_only
+  27) comm : comm_target _ comm_verb_only comm_language
+  28) comm : comm_target _ comm_language comm_verb_only
+
+  COMM_VERB     shift, and go to state 6
+  IN            shift, and go to state 7
+
+  comm_verb_only  go to state 66
+  comm_language  go to state 67
+
+state 12
+
+  78) indirect_preposition : FROM _
+  82) indirect_preposition : FROM _ rel_preposition
+
+  AGAINST       shift, and go to state 70
+  BEHIND        shift, and go to state 75
+  BEFORE        shift, and go to state 76
+  BESIDE        shift, and go to state 77
+  BLOCKING      shift, and go to state 82
+  CLOSE         shift, and go to state 71
+  CONTAINING    shift, and go to state 78
+  GUARDING      shift, and go to state 81
+  HOLDING       shift, and go to state 79
+  IN            shift, and go to state 68
+  NEAR          shift, and go to state 73
+  ON            shift, and go to state 69
+  OVER          shift, and go to state 74
+  UNDER         shift, and go to state 72
+  WITH          shift, and go to state 80
+  $default      reduce using rule 78 (indirect_preposition)
+
+  rel_preposition  go to state 83
+
+state 13
+
+  79) indirect_preposition : TO _
+  83) indirect_preposition : TO _ rel_preposition
+
+  AGAINST       shift, and go to state 70
+  BEHIND        shift, and go to state 75
+  BEFORE        shift, and go to state 76
+  BESIDE        shift, and go to state 77
+  BLOCKING      shift, and go to state 82
+  CLOSE         shift, and go to state 71
+  CONTAINING    shift, and go to state 78
+  GUARDING      shift, and go to state 81
+  HOLDING       shift, and go to state 79
+  IN            shift, and go to state 68
+  NEAR          shift, and go to state 73
+  ON            shift, and go to state 69
+  OVER          shift, and go to state 74
+  UNDER         shift, and go to state 72
+  WITH          shift, and go to state 80
+  $default      reduce using rule 79 (indirect_preposition)
+
+  rel_preposition  go to state 84
+
+state 14
+
+  80) indirect_preposition : AT _
+
+  $default      reduce using rule 80 (indirect_preposition)
+
+
+state 15
+
+  81) indirect_preposition : THROUGH _
+
+  $default      reduce using rule 81 (indirect_preposition)
+
+
+state 16
+
+  85) indirect_noun_phrase : indirect_preposition _ objects adverbs
+
+  NUMBER        shift, and go to state 55
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  $default      reduce using rule 110 (opt_quantifier)
+
+  objects       go to state 85
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 17
+
+
+  $end          shift, and go to state 86
+
+
+state 18
+
+   2) sentence : commands STRING _
+
+  $default      reduce using rule 2 (sentence)
+
+
+state 19
+
+   7) commands : commands and_then _ adverbs command
+
+  $default      reduce using rule 49 (adverbs)
+
+  adverbs       go to state 87
+
+state 20
+
+   8) and_then : THEN _
+
+  $default      reduce using rule 8 (and_then)
+
+
+state 21
+
+   9) and_then : AND_THEN _
+
+  $default      reduce using rule 9 (and_then)
+
+
+state 22
+
+   4) sentence : adverbs communication _ STRING adverbs
+   5) sentence : adverbs communication _ topic
+
+  STRING        shift, and go to state 88
+  ABOUT         shift, and go to state 91
+  THAT          shift, and go to state 92
+
+  topic         go to state 89
+  topic_intro   go to state 90
+
+state 23
+
+   6) commands : adverbs command _
+
+  $default      reduce using rule 6 (commands)
+
+
+state 24
+
+  10) command : ttv _
+
+  $default      reduce using rule 10 (command)
+
+
+state 25
+
+  11) command : btv _
+  43) ttv : btv _ instrument_noun_phrase
+
+  IN            shift, and go to state 94
+  USING         shift, and go to state 38
+  WITH          shift, and go to state 37
+  $default      reduce using rule 11 (command)
+
+  instrument_noun_phrase  go to state 93
+  instrument_preposition  go to state 40
+
+state 26
+
+  12) command : tv _
+  38) btv : tv _ indirect_noun_phrase
+  46) ttv : tv _ instrument_noun_phrase indirect_noun_phrase
+
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  IN            shift, and go to state 94
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+  USING         shift, and go to state 38
+  WITH          shift, and go to state 37
+  $default      reduce using rule 12 (command)
+
+  indirect_noun_phrase  go to state 95
+  instrument_noun_phrase  go to state 96
+  indirect_preposition  go to state 16
+  instrument_preposition  go to state 40
+
+state 27
+
+  13) command : verb_only _
+  35) tv : verb_only _ dnp
+  37) btv : verb_only _ indirect_noun_phrase dnp
+  45) ttv : verb_only _ indirect_noun_phrase instrument_noun_phrase dnp
+
+  NUMBER        shift, and go to state 55
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  LANGUAGE      reduce using rule 110 (opt_quantifier)
+  WORD          reduce using rule 110 (opt_quantifier)
+  FRONT         reduce using rule 110 (opt_quantifier)
+  $default      reduce using rule 13 (command)
+
+  dnp           go to state 97
+  indirect_noun_phrase  go to state 98
+  objects       go to state 39
+  indirect_preposition  go to state 16
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 28
+
+  16) comm_language : IN _ LANGUAGE adverbs
+  60) instrument_preposition : IN _
+
+  LANGUAGE      shift, and go to state 60
+  LANGUAGE      [reduce using rule 60 (instrument_preposition)]
+  $default      reduce using rule 60 (instrument_preposition)
+
+
+state 29
+
+  17) comm_target : indirect_noun_phrase _ adverbs
+  40) btv : indirect_noun_phrase _ tv
+  42) btv : indirect_noun_phrase _ movement_verb_only
+  48) ttv : indirect_noun_phrase _ instrument_noun_phrase tv
+
+  VERB          shift, and go to state 30
+  NUMBER        shift, and go to state 55
+  MOVEMENT_VERB  shift, and go to state 32
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  IN            shift, and go to state 94
+  IN            [reduce using rule 49 (adverbs)]
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  USING         shift, and go to state 38
+  WITH          shift, and go to state 37
+  LANGUAGE      reduce using rule 110 (opt_quantifier)
+  WORD          reduce using rule 110 (opt_quantifier)
+  FRONT         reduce using rule 110 (opt_quantifier)
+  $default      reduce using rule 49 (adverbs)
+
+  adverbs       go to state 61
+  movement_verb_only  go to state 99
+  verb_only     go to state 100
+  dnp           go to state 101
+  tv            go to state 102
+  instrument_noun_phrase  go to state 103
+  objects       go to state 39
+  instrument_preposition  go to state 40
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 30
+
+  32) verb_only : VERB _ adverbs
+
+  $default      reduce using rule 49 (adverbs)
+
+  adverbs       go to state 104
+
+state 31
+
+  33) verb_only : movement_verb_only _
+  41) btv : movement_verb_only _ indirect_noun_phrase
+
+  AT            shift, and go to state 14
+  AT            [reduce using rule 33 (verb_only)]
+  FROM          shift, and go to state 12
+  FROM          [reduce using rule 33 (verb_only)]
+  TO            shift, and go to state 13
+  TO            [reduce using rule 33 (verb_only)]
+  THROUGH       shift, and go to state 15
+  THROUGH       [reduce using rule 33 (verb_only)]
+  $default      reduce using rule 33 (verb_only)
+
+  indirect_noun_phrase  go to state 105
+  indirect_preposition  go to state 16
+
+state 32
+
+  34) movement_verb_only : MOVEMENT_VERB _ adverbs
+
+  $default      reduce using rule 49 (adverbs)
+
+  adverbs       go to state 106
+
+state 33
+
+  36) tv : dnp _ verb_only
+  39) btv : dnp _ indirect_noun_phrase verb_only
+  47) ttv : dnp _ instrument_noun_phrase indirect_noun_phrase verb_only
+
+  VERB          shift, and go to state 30
+  MOVEMENT_VERB  shift, and go to state 32
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  IN            shift, and go to state 94
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+  USING         shift, and go to state 38
+  WITH          shift, and go to state 37
+
+  movement_verb_only  go to state 107
+  verb_only     go to state 108
+  indirect_noun_phrase  go to state 109
+  instrument_noun_phrase  go to state 110
+  indirect_preposition  go to state 16
+  instrument_preposition  go to state 40
+
+state 34
+
+  44) ttv : instrument_noun_phrase _ btv
+
+  VERB          shift, and go to state 30
+  NUMBER        shift, and go to state 55
+  MOVEMENT_VERB  shift, and go to state 32
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  $default      reduce using rule 110 (opt_quantifier)
+
+  movement_verb_only  go to state 31
+  verb_only     go to state 111
+  dnp           go to state 112
+  tv            go to state 113
+  indirect_noun_phrase  go to state 114
+  btv           go to state 115
+  objects       go to state 39
+  indirect_preposition  go to state 16
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 35
+
+  50) adverbs : adverbs opt_and _ ADVERB
+
+  ADVERB        shift, and go to state 116
+
+
+state 36
+
+  52) opt_and : AND _
+
+  $default      reduce using rule 52 (opt_and)
+
+
+state 37
+
+  58) instrument_preposition : WITH _
+
+  $default      reduce using rule 58 (instrument_preposition)
+
+
+state 38
+
+  59) instrument_preposition : USING _
+
+  $default      reduce using rule 59 (instrument_preposition)
+
+
+state 39
+
+  84) dnp : objects _ adverbs
+  89) objects : objects _ conjunction noun
+
+  AND           shift, and go to state 119
+  AND           [reduce using rule 49 (adverbs)]
+  $default      reduce using rule 49 (adverbs)
+
+  adverbs       go to state 117
+  conjunction   go to state 118
+
+state 40
+
+  86) instrument_noun_phrase : instrument_preposition _ objects adverbs
+
+  NUMBER        shift, and go to state 55
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  $default      reduce using rule 110 (opt_quantifier)
+
+  objects       go to state 120
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 41
+
+  87) noun_phrase : opt_quantifier _ words
+
+  LANGUAGE      shift, and go to state 123
+  WORD          shift, and go to state 121
+  FRONT         shift, and go to state 122
+
+  word          go to state 124
+  words         go to state 125
+
+state 42
+
+  88) objects : noun _
+  92) noun : noun _ rel_preposition noun_phrase
+
+  AGAINST       shift, and go to state 70
+  BEHIND        shift, and go to state 75
+  BEFORE        shift, and go to state 76
+  BESIDE        shift, and go to state 77
+  BLOCKING      shift, and go to state 82
+  CLOSE         shift, and go to state 71
+  CONTAINING    shift, and go to state 78
+  GUARDING      shift, and go to state 81
+  HOLDING       shift, and go to state 79
+  IN            shift, and go to state 68
+  IN            [reduce using rule 88 (objects)]
+  NEAR          shift, and go to state 73
+  ON            shift, and go to state 69
+  OVER          shift, and go to state 74
+  UNDER         shift, and go to state 72
+  WITH          shift, and go to state 80
+  WITH          [reduce using rule 88 (objects)]
+  $default      reduce using rule 88 (objects)
+
+  rel_preposition  go to state 126
+
+state 43
+
+  90) noun : ALL _
+ 106) quantifier : ALL _
+
+  OF            reduce using rule 106 (quantifier)
+  LANGUAGE      [reduce using rule 106 (quantifier)]
+  WORD          [reduce using rule 106 (quantifier)]
+  FRONT         [reduce using rule 106 (quantifier)]
+  $default      reduce using rule 90 (noun)
+
+
+state 44
+
+  91) noun : noun_phrase _
+
+  $default      reduce using rule 91 (noun)
+
+
+state 45
+
+  94) article : THE _
+
+  $default      reduce using rule 94 (article)
+
+
+state 46
+
+  95) article : A _
+
+  $default      reduce using rule 95 (article)
+
+
+state 47
+
+  96) article : AN _
+
+  $default      reduce using rule 96 (article)
+
+
+state 48
+
+  97) article : ANY _
+
+  $default      reduce using rule 97 (article)
+
+
+state 49
+
+  98) article : MY _
+
+  $default      reduce using rule 98 (article)
+
+
+state 50
+
+  99) article : HER _
+
+  $default      reduce using rule 99 (article)
+
+
+state 51
+
+ 100) article : HIS _
+
+  $default      reduce using rule 100 (article)
+
+
+state 52
+
+ 101) article : ITS _
+
+  $default      reduce using rule 101 (article)
+
+
+state 53
+
+ 102) article : THEIR _
+
+  $default      reduce using rule 102 (article)
+
+
+state 54
+
+ 103) quantifier : article _
+ 104) quantifier : article _ NUMBER
+
+  NUMBER        shift, and go to state 127
+  $default      reduce using rule 103 (quantifier)
+
+
+state 55
+
+ 105) quantifier : NUMBER _
+ 112) fraction : NUMBER _ SLASH NUMBER
+
+  SLASH         shift, and go to state 128
+  $default      reduce using rule 105 (quantifier)
+
+
+state 56
+
+ 107) quantifier : fraction _
+
+  $default      reduce using rule 107 (quantifier)
+
+
+state 57
+
+ 108) quantifiers : quantifier _
+
+  $default      reduce using rule 108 (quantifiers)
+
+
+state 58
+
+ 109) quantifiers : quantifiers _ OF quantifier
+ 111) opt_quantifier : quantifiers _
+
+  OF            shift, and go to state 129
+  $default      reduce using rule 111 (opt_quantifier)
+
+
+state 59
+
+  15) comm_verb_only : COMM_VERB adverbs _
+  50) adverbs : adverbs _ opt_and ADVERB
+
+  AND           shift, and go to state 36
+  ADVERB        reduce using rule 51 (opt_and)
+  $default      reduce using rule 15 (comm_verb_only)
+
+  opt_and       go to state 35
+
+state 60
+
+  16) comm_language : IN LANGUAGE _ adverbs
+
+  $default      reduce using rule 49 (adverbs)
+
+  adverbs       go to state 130
+
+state 61
+
+  17) comm_target : indirect_noun_phrase adverbs _
+  50) adverbs : adverbs _ opt_and ADVERB
+
+  AND           shift, and go to state 36
+  ADVERB        reduce using rule 51 (opt_and)
+  $default      reduce using rule 17 (comm_target)
+
+  opt_and       go to state 35
+
+state 62
+
+  19) comm : comm_verb_only comm_language _
+  21) comm : comm_verb_only comm_language _ comm_target
+
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+  $default      reduce using rule 19 (comm)
+
+  indirect_noun_phrase  go to state 8
+  comm_target   go to state 131
+  indirect_preposition  go to state 16
+
+state 63
+
+  20) comm : comm_verb_only comm_target _
+  22) comm : comm_verb_only comm_target _ comm_language
+
+  IN            shift, and go to state 7
+  $default      reduce using rule 20 (comm)
+
+  comm_language  go to state 132
+
+state 64
+
+  23) comm : comm_language comm_verb_only _
+  24) comm : comm_language comm_verb_only _ comm_target
+
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+  $default      reduce using rule 23 (comm)
+
+  indirect_noun_phrase  go to state 8
+  comm_target   go to state 133
+  indirect_preposition  go to state 16
+
+state 65
+
+  25) comm : comm_language comm_target _ comm_verb_only
+
+  COMM_VERB     shift, and go to state 6
+
+  comm_verb_only  go to state 134
+
+state 66
+
+  26) comm : comm_target comm_verb_only _
+  27) comm : comm_target comm_verb_only _ comm_language
+
+  IN            shift, and go to state 7
+  $default      reduce using rule 26 (comm)
+
+  comm_language  go to state 135
+
+state 67
+
+  28) comm : comm_target comm_language _ comm_verb_only
+
+  COMM_VERB     shift, and go to state 6
+
+  comm_verb_only  go to state 136
+
+state 68
+
+  61) rel_preposition : IN _
+  71) rel_preposition : IN _ FRONT OF
+
+  FRONT         shift, and go to state 137
+  FRONT         [reduce using rule 61 (rel_preposition)]
+  $default      reduce using rule 61 (rel_preposition)
+
+
+state 69
+
+  62) rel_preposition : ON _
+
+  $default      reduce using rule 62 (rel_preposition)
+
+
+state 70
+
+  63) rel_preposition : AGAINST _
+
+  $default      reduce using rule 63 (rel_preposition)
+
+
+state 71
+
+  64) rel_preposition : CLOSE _
+  65) rel_preposition : CLOSE _ TO
+
+  TO            shift, and go to state 138
+  $default      reduce using rule 64 (rel_preposition)
+
+
+state 72
+
+  66) rel_preposition : UNDER _
+
+  $default      reduce using rule 66 (rel_preposition)
+
+
+state 73
+
+  67) rel_preposition : NEAR _
+
+  $default      reduce using rule 67 (rel_preposition)
+
+
+state 74
+
+  68) rel_preposition : OVER _
+
+  $default      reduce using rule 68 (rel_preposition)
+
+
+state 75
+
+  69) rel_preposition : BEHIND _
+
+  $default      reduce using rule 69 (rel_preposition)
+
+
+state 76
+
+  70) rel_preposition : BEFORE _
+
+  $default      reduce using rule 70 (rel_preposition)
+
+
+state 77
+
+  72) rel_preposition : BESIDE _
+
+  $default      reduce using rule 72 (rel_preposition)
+
+
+state 78
+
+  73) rel_preposition : CONTAINING _
+
+  $default      reduce using rule 73 (rel_preposition)
+
+
+state 79
+
+  74) rel_preposition : HOLDING _
+
+  $default      reduce using rule 74 (rel_preposition)
+
+
+state 80
+
+  75) rel_preposition : WITH _
+
+  $default      reduce using rule 75 (rel_preposition)
+
+
+state 81
+
+  76) rel_preposition : GUARDING _
+
+  $default      reduce using rule 76 (rel_preposition)
+
+
+state 82
+
+  77) rel_preposition : BLOCKING _
+
+  $default      reduce using rule 77 (rel_preposition)
+
+
+state 83
+
+  82) indirect_preposition : FROM rel_preposition _
+
+  $default      reduce using rule 82 (indirect_preposition)
+
+
+state 84
+
+  83) indirect_preposition : TO rel_preposition _
+
+  $default      reduce using rule 83 (indirect_preposition)
+
+
+state 85
+
+  85) indirect_noun_phrase : indirect_preposition objects _ adverbs
+  89) objects : objects _ conjunction noun
+
+  AND           shift, and go to state 119
+  AND           [reduce using rule 49 (adverbs)]
+  $default      reduce using rule 49 (adverbs)
+
+  adverbs       go to state 139
+  conjunction   go to state 118
+
+state 86
+
+
+  $default      accept
+
+
+state 87
+
+   7) commands : commands and_then adverbs _ command
+  50) adverbs : adverbs _ opt_and ADVERB
+
+  VERB          shift, and go to state 30
+  NUMBER        shift, and go to state 55
+  MOVEMENT_VERB  shift, and go to state 32
+  AND           shift, and go to state 36
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  IN            shift, and go to state 94
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  USING         shift, and go to state 38
+  WITH          shift, and go to state 37
+  ADVERB        reduce using rule 51 (opt_and)
+  $default      reduce using rule 110 (opt_quantifier)
+
+  command       go to state 140
+  ttv           go to state 24
+  btv           go to state 25
+  tv            go to state 26
+  verb_only     go to state 27
+  movement_verb_only  go to state 31
+  dnp           go to state 33
+  indirect_noun_phrase  go to state 141
+  instrument_noun_phrase  go to state 34
+  opt_and       go to state 35
+  objects       go to state 39
+  indirect_preposition  go to state 16
+  instrument_preposition  go to state 40
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 88
+
+   4) sentence : adverbs communication STRING _ adverbs
+
+  $default      reduce using rule 49 (adverbs)
+
+  adverbs       go to state 142
+
+state 89
+
+   5) sentence : adverbs communication topic _
+
+  $default      reduce using rule 5 (sentence)
+
+
+state 90
+
+  29) topic : topic_intro _ words
+
+  LANGUAGE      shift, and go to state 123
+  WORD          shift, and go to state 121
+  FRONT         shift, and go to state 122
+
+  words         go to state 143
+  word          go to state 124
+
+state 91
+
+  30) topic_intro : ABOUT _
+
+  $default      reduce using rule 30 (topic_intro)
+
+
+state 92
+
+  31) topic_intro : THAT _
+
+  $default      reduce using rule 31 (topic_intro)
+
+
+state 93
+
+  43) ttv : btv instrument_noun_phrase _
+
+  $default      reduce using rule 43 (ttv)
+
+
+state 94
+
+  60) instrument_preposition : IN _
+
+  $default      reduce using rule 60 (instrument_preposition)
+
+
+state 95
+
+  38) btv : tv indirect_noun_phrase _
+
+  $default      reduce using rule 38 (btv)
+
+
+state 96
+
+  46) ttv : tv instrument_noun_phrase _ indirect_noun_phrase
+
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+
+  indirect_noun_phrase  go to state 144
+  indirect_preposition  go to state 16
+
+state 97
+
+  35) tv : verb_only dnp _
+
+  $default      reduce using rule 35 (tv)
+
+
+state 98
+
+  37) btv : verb_only indirect_noun_phrase _ dnp
+  45) ttv : verb_only indirect_noun_phrase _ instrument_noun_phrase dnp
+
+  NUMBER        shift, and go to state 55
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  IN            shift, and go to state 94
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  USING         shift, and go to state 38
+  WITH          shift, and go to state 37
+  $default      reduce using rule 110 (opt_quantifier)
+
+  dnp           go to state 145
+  instrument_noun_phrase  go to state 146
+  objects       go to state 39
+  instrument_preposition  go to state 40
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 99
+
+  33) verb_only : movement_verb_only _
+  42) btv : indirect_noun_phrase movement_verb_only _
+
+  $end          reduce using rule 42 (btv)
+  STRING        reduce using rule 42 (btv)
+  IN            reduce using rule 42 (btv)
+  THEN          reduce using rule 42 (btv)
+  USING         reduce using rule 42 (btv)
+  WITH          reduce using rule 42 (btv)
+  AND_THEN      reduce using rule 42 (btv)
+  $default      reduce using rule 33 (verb_only)
+
+
+state 100
+
+  35) tv : verb_only _ dnp
+
+  NUMBER        shift, and go to state 55
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  $default      reduce using rule 110 (opt_quantifier)
+
+  dnp           go to state 97
+  objects       go to state 39
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 101
+
+  36) tv : dnp _ verb_only
+
+  VERB          shift, and go to state 30
+  MOVEMENT_VERB  shift, and go to state 32
+
+  movement_verb_only  go to state 107
+  verb_only     go to state 108
+
+state 102
+
+  40) btv : indirect_noun_phrase tv _
+
+  $default      reduce using rule 40 (btv)
+
+
+state 103
+
+  48) ttv : indirect_noun_phrase instrument_noun_phrase _ tv
+
+  VERB          shift, and go to state 30
+  NUMBER        shift, and go to state 55
+  MOVEMENT_VERB  shift, and go to state 32
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  $default      reduce using rule 110 (opt_quantifier)
+
+  movement_verb_only  go to state 107
+  verb_only     go to state 100
+  dnp           go to state 101
+  tv            go to state 147
+  objects       go to state 39
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 104
+
+  32) verb_only : VERB adverbs _
+  50) adverbs : adverbs _ opt_and ADVERB
+
+  AND           shift, and go to state 36
+  ADVERB        reduce using rule 51 (opt_and)
+  $default      reduce using rule 32 (verb_only)
+
+  opt_and       go to state 35
+
+state 105
+
+  41) btv : movement_verb_only indirect_noun_phrase _
+
+  $default      reduce using rule 41 (btv)
+
+
+state 106
+
+  34) movement_verb_only : MOVEMENT_VERB adverbs _
+  50) adverbs : adverbs _ opt_and ADVERB
+
+  AND           shift, and go to state 36
+  ADVERB        reduce using rule 51 (opt_and)
+  $default      reduce using rule 34 (movement_verb_only)
+
+  opt_and       go to state 35
+
+state 107
+
+  33) verb_only : movement_verb_only _
+
+  $default      reduce using rule 33 (verb_only)
+
+
+state 108
+
+  36) tv : dnp verb_only _
+
+  $default      reduce using rule 36 (tv)
+
+
+state 109
+
+  39) btv : dnp indirect_noun_phrase _ verb_only
+
+  VERB          shift, and go to state 30
+  MOVEMENT_VERB  shift, and go to state 32
+
+  movement_verb_only  go to state 107
+  verb_only     go to state 148
+
+state 110
+
+  47) ttv : dnp instrument_noun_phrase _ indirect_noun_phrase verb_only
+
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+
+  indirect_noun_phrase  go to state 149
+  indirect_preposition  go to state 16
+
+state 111
+
+  35) tv : verb_only _ dnp
+  37) btv : verb_only _ indirect_noun_phrase dnp
+
+  NUMBER        shift, and go to state 55
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  $default      reduce using rule 110 (opt_quantifier)
+
+  dnp           go to state 97
+  indirect_noun_phrase  go to state 150
+  objects       go to state 39
+  indirect_preposition  go to state 16
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 112
+
+  36) tv : dnp _ verb_only
+  39) btv : dnp _ indirect_noun_phrase verb_only
+
+  VERB          shift, and go to state 30
+  MOVEMENT_VERB  shift, and go to state 32
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+
+  movement_verb_only  go to state 107
+  verb_only     go to state 108
+  indirect_noun_phrase  go to state 109
+  indirect_preposition  go to state 16
+
+state 113
+
+  38) btv : tv _ indirect_noun_phrase
+
+  AT            shift, and go to state 14
+  FROM          shift, and go to state 12
+  TO            shift, and go to state 13
+  THROUGH       shift, and go to state 15
+
+  indirect_noun_phrase  go to state 95
+  indirect_preposition  go to state 16
+
+state 114
+
+  40) btv : indirect_noun_phrase _ tv
+  42) btv : indirect_noun_phrase _ movement_verb_only
+
+  VERB          shift, and go to state 30
+  NUMBER        shift, and go to state 55
+  MOVEMENT_VERB  shift, and go to state 32
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  $default      reduce using rule 110 (opt_quantifier)
+
+  movement_verb_only  go to state 99
+  verb_only     go to state 100
+  dnp           go to state 101
+  tv            go to state 102
+  objects       go to state 39
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 115
+
+  44) ttv : instrument_noun_phrase btv _
+
+  $default      reduce using rule 44 (ttv)
+
+
+state 116
+
+  50) adverbs : adverbs opt_and ADVERB _
+
+  $default      reduce using rule 50 (adverbs)
+
+
+state 117
+
+  50) adverbs : adverbs _ opt_and ADVERB
+  84) dnp : objects adverbs _
+
+  AND           shift, and go to state 36
+  ADVERB        reduce using rule 51 (opt_and)
+  $default      reduce using rule 84 (dnp)
+
+  opt_and       go to state 35
+
+state 118
+
+  89) objects : objects conjunction _ noun
+
+  NUMBER        shift, and go to state 55
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  $default      reduce using rule 110 (opt_quantifier)
+
+  opt_quantifier  go to state 41
+  noun          go to state 151
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 119
+
+  93) conjunction : AND _
+
+  $default      reduce using rule 93 (conjunction)
+
+
+state 120
+
+  86) instrument_noun_phrase : instrument_preposition objects _ adverbs
+  89) objects : objects _ conjunction noun
+
+  AND           shift, and go to state 119
+  AND           [reduce using rule 49 (adverbs)]
+  $default      reduce using rule 49 (adverbs)
+
+  adverbs       go to state 152
+  conjunction   go to state 118
+
+state 121
+
+  53) word : WORD _
+
+  $default      reduce using rule 53 (word)
+
+
+state 122
+
+  54) word : FRONT _
+
+  $default      reduce using rule 54 (word)
+
+
+state 123
+
+  55) word : LANGUAGE _
+
+  $default      reduce using rule 55 (word)
+
+
+state 124
+
+  56) words : word _
+
+  $default      reduce using rule 56 (words)
+
+
+state 125
+
+  57) words : words _ word
+  87) noun_phrase : opt_quantifier words _
+
+  LANGUAGE      shift, and go to state 123
+  LANGUAGE      [reduce using rule 87 (noun_phrase)]
+  WORD          shift, and go to state 121
+  WORD          [reduce using rule 87 (noun_phrase)]
+  FRONT         shift, and go to state 122
+  FRONT         [reduce using rule 87 (noun_phrase)]
+  $default      reduce using rule 87 (noun_phrase)
+
+  word          go to state 153
+
+state 126
+
+  92) noun : noun rel_preposition _ noun_phrase
+
+  NUMBER        shift, and go to state 55
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 155
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  $default      reduce using rule 110 (opt_quantifier)
+
+  opt_quantifier  go to state 41
+  noun_phrase   go to state 154
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 127
+
+ 104) quantifier : article NUMBER _
+
+  $default      reduce using rule 104 (quantifier)
+
+
+state 128
+
+ 112) fraction : NUMBER SLASH _ NUMBER
+
+  NUMBER        shift, and go to state 156
+
+
+state 129
+
+ 109) quantifiers : quantifiers OF _ quantifier
+
+  NUMBER        shift, and go to state 55
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 155
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 157
+
+state 130
+
+  16) comm_language : IN LANGUAGE adverbs _
+  50) adverbs : adverbs _ opt_and ADVERB
+
+  AND           shift, and go to state 36
+  ADVERB        reduce using rule 51 (opt_and)
+  $default      reduce using rule 16 (comm_language)
+
+  opt_and       go to state 35
+
+state 131
+
+  21) comm : comm_verb_only comm_language comm_target _
+
+  $default      reduce using rule 21 (comm)
+
+
+state 132
+
+  22) comm : comm_verb_only comm_target comm_language _
+
+  $default      reduce using rule 22 (comm)
+
+
+state 133
+
+  24) comm : comm_language comm_verb_only comm_target _
+
+  $default      reduce using rule 24 (comm)
+
+
+state 134
+
+  25) comm : comm_language comm_target comm_verb_only _
+
+  $default      reduce using rule 25 (comm)
+
+
+state 135
+
+  27) comm : comm_target comm_verb_only comm_language _
+
+  $default      reduce using rule 27 (comm)
+
+
+state 136
+
+  28) comm : comm_target comm_language comm_verb_only _
+
+  $default      reduce using rule 28 (comm)
+
+
+state 137
+
+  71) rel_preposition : IN FRONT _ OF
+
+  OF            shift, and go to state 158
+
+
+state 138
+
+  65) rel_preposition : CLOSE TO _
+
+  $default      reduce using rule 65 (rel_preposition)
+
+
+state 139
+
+  50) adverbs : adverbs _ opt_and ADVERB
+  85) indirect_noun_phrase : indirect_preposition objects adverbs _
+
+  AND           shift, and go to state 36
+  AND           [reduce using rule 85 (indirect_noun_phrase)]
+  ADVERB        reduce using rule 51 (opt_and)
+  ADVERB        [reduce using rule 85 (indirect_noun_phrase)]
+  $default      reduce using rule 85 (indirect_noun_phrase)
+
+  opt_and       go to state 35
+
+state 140
+
+   7) commands : commands and_then adverbs command _
+
+  $default      reduce using rule 7 (commands)
+
+
+state 141
+
+  40) btv : indirect_noun_phrase _ tv
+  42) btv : indirect_noun_phrase _ movement_verb_only
+  48) ttv : indirect_noun_phrase _ instrument_noun_phrase tv
+
+  VERB          shift, and go to state 30
+  NUMBER        shift, and go to state 55
+  MOVEMENT_VERB  shift, and go to state 32
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  IN            shift, and go to state 94
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  USING         shift, and go to state 38
+  WITH          shift, and go to state 37
+  $default      reduce using rule 110 (opt_quantifier)
+
+  movement_verb_only  go to state 99
+  verb_only     go to state 100
+  dnp           go to state 101
+  tv            go to state 102
+  instrument_noun_phrase  go to state 103
+  objects       go to state 39
+  instrument_preposition  go to state 40
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 142
+
+   4) sentence : adverbs communication STRING adverbs _
+  50) adverbs : adverbs _ opt_and ADVERB
+
+  AND           shift, and go to state 36
+  ADVERB        reduce using rule 51 (opt_and)
+  $default      reduce using rule 4 (sentence)
+
+  opt_and       go to state 35
+
+state 143
+
+  29) topic : topic_intro words _
+  57) words : words _ word
+
+  LANGUAGE      shift, and go to state 123
+  WORD          shift, and go to state 121
+  FRONT         shift, and go to state 122
+  $default      reduce using rule 29 (topic)
+
+  word          go to state 153
+
+state 144
+
+  46) ttv : tv instrument_noun_phrase indirect_noun_phrase _
+
+  $default      reduce using rule 46 (ttv)
+
+
+state 145
+
+  37) btv : verb_only indirect_noun_phrase dnp _
+
+  $default      reduce using rule 37 (btv)
+
+
+state 146
+
+  45) ttv : verb_only indirect_noun_phrase instrument_noun_phrase _ dnp
+
+  NUMBER        shift, and go to state 55
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  $default      reduce using rule 110 (opt_quantifier)
+
+  dnp           go to state 159
+  objects       go to state 39
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 147
+
+  48) ttv : indirect_noun_phrase instrument_noun_phrase tv _
+
+  $default      reduce using rule 48 (ttv)
+
+
+state 148
+
+  39) btv : dnp indirect_noun_phrase verb_only _
+
+  $default      reduce using rule 39 (btv)
+
+
+state 149
+
+  47) ttv : dnp instrument_noun_phrase indirect_noun_phrase _ verb_only
+
+  VERB          shift, and go to state 30
+  MOVEMENT_VERB  shift, and go to state 32
+
+  movement_verb_only  go to state 107
+  verb_only     go to state 160
+
+state 150
+
+  37) btv : verb_only indirect_noun_phrase _ dnp
+
+  NUMBER        shift, and go to state 55
+  A             shift, and go to state 46
+  AN            shift, and go to state 47
+  ANY           shift, and go to state 48
+  ALL           shift, and go to state 43
+  HER           shift, and go to state 50
+  HIS           shift, and go to state 51
+  ITS           shift, and go to state 52
+  MY            shift, and go to state 49
+  THE           shift, and go to state 45
+  THEIR         shift, and go to state 53
+  $default      reduce using rule 110 (opt_quantifier)
+
+  dnp           go to state 145
+  objects       go to state 39
+  opt_quantifier  go to state 41
+  noun          go to state 42
+  noun_phrase   go to state 44
+  article       go to state 54
+  fraction      go to state 56
+  quantifier    go to state 57
+  quantifiers   go to state 58
+
+state 151
+
+  89) objects : objects conjunction noun _
+  92) noun : noun _ rel_preposition noun_phrase
+
+  AGAINST       shift, and go to state 70
+  BEHIND        shift, and go to state 75
+  BEFORE        shift, and go to state 76
+  BESIDE        shift, and go to state 77
+  BLOCKING      shift, and go to state 82
+  CLOSE         shift, and go to state 71
+  CONTAINING    shift, and go to state 78
+  GUARDING      shift, and go to state 81
+  HOLDING       shift, and go to state 79
+  IN            shift, and go to state 68
+  IN            [reduce using rule 89 (objects)]
+  NEAR          shift, and go to state 73
+  ON            shift, and go to state 69
+  OVER          shift, and go to state 74
+  UNDER         shift, and go to state 72
+  WITH          shift, and go to state 80
+  WITH          [reduce using rule 89 (objects)]
+  $default      reduce using rule 89 (objects)
+
+  rel_preposition  go to state 126
+
+state 152
+
+  50) adverbs : adverbs _ opt_and ADVERB
+  86) instrument_noun_phrase : instrument_preposition objects adverbs _
+
+  AND           shift, and go to state 36
+  ADVERB        reduce using rule 51 (opt_and)
+  $default      reduce using rule 86 (instrument_noun_phrase)
+
+  opt_and       go to state 35
+
+state 153
+
+  57) words : words word _
+
+  $default      reduce using rule 57 (words)
+
+
+state 154
+
+  92) noun : noun rel_preposition noun_phrase _
+
+  $default      reduce using rule 92 (noun)
+
+
+state 155
+
+ 106) quantifier : ALL _
+
+  $default      reduce using rule 106 (quantifier)
+
+
+state 156
+
+ 112) fraction : NUMBER SLASH NUMBER _
+
+  $default      reduce using rule 112 (fraction)
+
+
+state 157
+
+ 109) quantifiers : quantifiers OF quantifier _
+
+  $default      reduce using rule 109 (quantifiers)
+
+
+state 158
+
+  71) rel_preposition : IN FRONT OF _
+
+  $default      reduce using rule 71 (rel_preposition)
+
+
+state 159
+
+  45) ttv : verb_only indirect_noun_phrase instrument_noun_phrase dnp _
+
+  $default      reduce using rule 45 (ttv)
+
+
+state 160
+
+  47) ttv : dnp instrument_noun_phrase indirect_noun_phrase verb_only _
+
+  $default      reduce using rule 47 (ttv)
+
