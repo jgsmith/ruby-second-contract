@@ -7,6 +7,10 @@ class SecondContract::Service::Admin < EventMachine::Connection
   def server
     SecondContract::Driver.instance
   end
+
+  def game
+    SecondContract::Game.instance
+  end
   
   def post_init
     send_data("Second Contract Administrative Console\n\n> ")
@@ -26,7 +30,8 @@ class SecondContract::Service::Admin < EventMachine::Connection
     when "status"
       send_data(
         "Players: #{server.player_connections.length}\t" +
-        "Admins: #{server.admin_connections.length}\n"
+        "Admins: #{server.admin_connections.length}\n" +
+        "Objects: #{Item.count}\tArchetypes: #{game.archetypes.length}\n"
       )
       if server.stopping
         send_data("\nThe server is in the processes of shutting down.\n")

@@ -7,6 +7,9 @@ class SecondContract::Compiler::Script
 
   def compile parse_tree
     @code = []
+    @line = 0
+    @column = 0
+    @filename = '<unknown>'
     _compile(parse_tree)
     @code
   end
@@ -15,13 +18,23 @@ private
 
   def _compile(parse_tree)
     case parse_tree.first
+    when :LINE
+      @line = parse_tree.last
+    when :COLUMN
+      @column = parse_tree.last
+    when :FILENAME
+      @filename = parse_tree.last
     when :COMPOUND_EXP
+      @code << :MARK
       parse_tree.drop(1).each do |x|
         @code << :CLEAR
+        @code << :MARK
         _compile(x)
       end
-    when :DATA, :INT, :FLOAT
+    when :DATA, :INT, :FLOAT, :STRING
       push parse_tree[1]
+    when :CONST
+      push SecondContract::Game.instance.constants[parse_tree[1]]
     when :SET_PROP
       compile_simple_set :STORE_PROP
     when :SET_VAR
@@ -44,6 +57,12 @@ private
         push parse_tree[1]
         @code << :GET_PROP
       end
+    when :INDEX
+      _compile(parse_tree[1])
+      parse_tree.drop(2).each do |p|
+        _compile(p)
+        @code << :INDEX
+      end
     when :PLUS
       compile_series :SUM, parse_tree
     when :MINUS
@@ -64,7 +83,8 @@ private
         _compile(x)
       end
       @code << :CALL
-      @code << parse_tree[1] + (parse_tree.length-2)
+      @code << parse_tree[1]
+      @code << (parse_tree.length-2)
     when :LT
       # this makes sure the items are ordered from lowest to highest
       compile_series :LT, parse_tree
@@ -89,13 +109,13 @@ private
       # each part is [ cond, code ] except last, which is code (if else) or nil
       jump_locs = []
       parse_tree[1..parse_tree.length-2].each do |it|
-        _compile(it[0])
-        code << :JNE
+        _compile(it.first)
+        @code << :JUMP_UNLESS
         loc = @code.length
-        code << 0
-        _compile(it[1])
-        @code[loc] = @code.length - loc - 1
-        @code << :JMP
+        @code << 0
+        _compile(it.last)
+        @code[loc] = @code.length - loc - 1 + 2
+        @code << :JUMP
         jump_locs << @code.length
         @code << 0
       end
@@ -106,7 +126,8 @@ private
         @code[loc] = @code.length - loc - 1
       end
     else
-      raise "Unknown operation (#{parse_tree.first})"
+      puts parse_tree.first.to_yaml
+      raise "Unknown operation (#{parse_tree.first}) at #{@filename} line #{@line} column #{@column}"
     end
   end
 

@@ -3,13 +3,17 @@ module SecondContract::Game::Systems::Physicals
 
   NO_MASS = Unit("0 kilogram")
   NO_VOLUME = Unit("0 liter")
+  NO_GRAVITY = Unit("0 m/s^2")
+  NO_LENGTH = Unit("0 meter")
+  NO_DENSITY = Unit("0 kilogram/liter")
 
   def get_environment
     raise 'get_environment not defined'
   end
 
 	def physical key, objs = {}
-    if calculated?(:physical, key)
+    if !%w(mass:base gravity:base volume:base length:base environment).include?(key) &&
+        calculated?(:physical, key)
       calculate(:physical, key, objs)
     else
       get_physical key
@@ -21,6 +25,8 @@ module SecondContract::Game::Systems::Physicals
     when 'environment'
       # we don't set the environment here - this only reflects the
       # result of moving the object through other mechanisms
+    when 'mass:base', 'volume:base', 'gravity:base', 'length:base'
+      # do nothing
     when 'mass', 'mass:capacity'
       # we expect to use Unit(...)
       begin
@@ -36,6 +42,22 @@ module SecondContract::Game::Systems::Physicals
         v = Unit(value)
         if NO_VOLUME.compatible?(v) && v >= NO_VOLUME
           physicals[key] = v
+        end
+      rescue
+      end
+    when 'gravity'
+      begin
+        v = Unit(value)
+        if NO_GRAVITY.compatible?(v)
+          physicals[key] = v
+        end
+      rescue
+      end
+    when 'length', 'length:capacity'
+      begin
+        l = Unit(value)
+        if NO_LENGTH.compatible?(l) && l >= NO_LENGTH
+          physicals[key] = l
         end
       rescue
       end
@@ -73,6 +95,18 @@ module SecondContract::Game::Systems::Physicals
       NO_VOLUME
     when 'mass:base'
       NO_MASS
+    when 'gravity:base'
+      NO_GRAVITY
+    when 'length:base'
+      NO_LENGTH
+    when 'density:base'
+      NO_DENSITY
+    when 'density'
+      begin
+        physical('mass') / physical('volume')
+      rescue
+        Units("0 kilogram / liter")
+      end
     else
       if physicals.include?(key)
         physicals[key]

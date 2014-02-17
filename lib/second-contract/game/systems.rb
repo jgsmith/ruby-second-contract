@@ -8,6 +8,7 @@ module SecondContract::Game::Systems
   require 'second-contract/game/systems/physicals'
   require 'second-contract/game/systems/counters'
   require 'second-contract/game/systems/resources'
+  require 'second-contract/game/systems/flags'
 
   include SecondContract::Game::Systems::Traits
   include SecondContract::Game::Systems::Skills
@@ -15,6 +16,7 @@ module SecondContract::Game::Systems
   include SecondContract::Game::Systems::Physicals
   include SecondContract::Game::Systems::Counters
   include SecondContract::Game::Systems::Resources
+  include SecondContract::Game::Systems::Flags
 
 protected
 
@@ -25,5 +27,6 @@ protected
     initialize_physicals
     initialize_counters
     initialize_resources
+    initialize_flags
   end
 end

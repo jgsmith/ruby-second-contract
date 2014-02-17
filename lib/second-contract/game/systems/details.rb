@@ -75,7 +75,7 @@ module SecondContract::Game::Systems::Details
       # #{sense}:#{time}
       # #{sense}
       seasons.each do |season|
-        times.each do |times|
+        times.each do |time|
           if info["#{season}:#{sense}:#{time}"]
             description << info["#{sense}:#{season}:#{time}"]
             break
@@ -181,14 +181,14 @@ private
         }.map { |p| p.last }
         prepDistance = @@preposition_weights[prep.to_sym]
         if !prepDistance.nil?
-          vertices = targets.inject(vertices) do |vertices, detail|
+          vertices = targets.inject(vertices) do |vs, detail|
             details[detail] = get_all_detail(detail)
             weight = prepDistance
             weight -= details[detail]['notability'] if details[detail] && details[detail]['notabolity']
-            if !vertices.include?(detail) || vertices[detail] > weight
-              vertices[detail] = prepDistance
+            if !vs.include?(detail) || vs[detail] > weight
+              vs[detail] = prepDistance
             end
-            vertices
+            vs
           end
         end
       end

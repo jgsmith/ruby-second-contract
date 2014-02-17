@@ -1,8 +1,87 @@
 require 'eventmachine'
 require 'active_record'
 require 'singleton'
+require 'eventmachine'
+require 'optparse'
+require 'yaml'
 
-module SecondContract
+I18n.enforce_available_locales = false
+
+class SecondContract
+  def self.config(argv = [], environment = "production")
+    options = {
+      environment: environment
+    }
+    
+    OptionParser.new do |opts|
+      opts.banner = "Usage: driver [options] config.yml"
+
+      opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
+        options[:verbose] = v
+      end
+
+      opts.on("-c", "--check", "Check syntax only") do |c|
+        options[:check] = c
+      end
+
+      opts.on("-e", "--env", "Set environment type") do |e|
+        options[:environment] = e
+      end
+    end.parse!(argv)
+
+    # ARGV should have a config file now
+    if argv.length == 1
+      config_file = argv[0]
+    else
+      config_file = "config/game.yml"
+    end
+
+    def do_deep_merge v1, v2
+      if v1.is_a?(Hash) && v2.is_a?(Hash)
+        v1.merge(v2) { |k, vv1, vv2| do_deep_merge(vv1, vv2) }
+      elsif v1.is_a?(Array) && v2.is_a?(Array)
+        v1 + v2
+      else
+        v2
+      end
+    end
+
+    config_content = YAML.load_file(config_file)
+    config = {}
+    if config_content.include?('all')
+      config.merge!(config_content['all'])
+    end
+    if config_content.include?(options[:environment])
+      config.merge!(config_content[options[:environment]]) { |k, v1, v2| do_deep_merge(v1, v2) }
+    else
+      puts "Unable to find #{options[:environment]} configuration in #{config_file}"
+      exit 0
+    end
+
+    config['verbose'] = options['verbose']
+
+    if !options[:check]
+      ActiveRecord::Base.establish_connection(config)
+      ActiveRecord::Base.connection
+    else
+      config[:checkSyntaxOnly] = true
+    end
+
+    SecondContract::Game.instance.config(config)
+
+    config
+  end
+
+  def self.run(argv = [], environment = "production")
+    options = self.config(argv, environment)
+    if options[:checkSyntaxOnly]
+      SecondContract::Game.instance.compile_all
+    else
+      EventMachine::run {
+        SecondContract::Driver.instance.config(options).start
+      }
+    end
+  end
 end
 
 class SecondContract::Driver
@@ -12,9 +91,10 @@ class SecondContract::Driver
 
   attr_accessor :host, :port, :player_connections, :admin_connections, :stopping, :game
 
+
+
   def config(config)
     @game = SecondContract::Game.instance
-    @game.config(config)
     @admin_connections = []
     @player_connections = []
     @signatures = []
@@ -91,9 +171,9 @@ private
     admin_host = '127.0.0.1'
     admin_port = @config['services']['admin']['port']
 
-    puts "Starting telnet service on 127.0.0.1:#{admin_port}"
+    puts "Starting admin service on 127.0.0.1:#{admin_port}"
     @signatures << EventMachine::start_server(
-      '127.0.0.1', 
+      admin_host, 
       admin_port, 
       SecondContract::Service::Admin
     ) do |conn|

@@ -21,6 +21,7 @@ class Item < ActiveRecord::Base
   serialize :physicals, Hash
   serialize :counters, Hash
   serialize :resources, Hash
+  serialize :flags, Hash
 
   has_one :character, inverse_of: :item
 
@@ -30,13 +31,13 @@ class Item < ActiveRecord::Base
   has_many :targets, through: :target_relationships
   has_many :sources, through: :source_relationships
 
-  def initialize
+  def initialize(*args)
     super
     initialize_systems
   end
 
   def archetype
-    @archetype_obj ||= SecondContract.game.get_archetype(read_attribute(:archetype))
+    @archetype_obj ||= SecondContract::Game.instance.get_archetype(read_attribute(:archetype))
     @archetype_obj
   end
 

@@ -25,3 +25,8 @@ test:
   database: db/test.sqlite3
   pool: 5
   timeout: 5000
+
+all:
+  constants:
+    "True": true
+    "False": false

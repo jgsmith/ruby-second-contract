@@ -4,6 +4,8 @@ end
 require 'second-contract/parser/message'
 
 class SecondContract::Machine::Script
+  PROPERTY_TYPES = %w(counter detail flag physical resource skill trait)
+  attr_accessor :code
   def initialize code
     @code = code + [ :DONE ]
   end
@@ -24,6 +26,7 @@ class SecondContract::Machine::Script
     @vars = {}
     @stack = []
     @done = false
+    @stack_marks = []
   end
 
   def pop
@@ -42,18 +45,27 @@ class SecondContract::Machine::Script
     code = @code[@ip]
     @ip += 1
     case code
+    when :MARK
+      @stack_marks.push @stack.length
     when :CLEAR
-      @stack.clear
+      if !@stack_marks.empty?
+        l = @stack_marks.pop
+        if l > @stack.length
+          @stack.pop(@stack.length - l)
+        end
+      else
+        @stack.clear
+      end
     when :PUSH
       @stack.push @code[@ip]
       @ip += 1
     when :JUMP
-      @ip += @code[@ip]
+      @ip += @code[@ip] + 1
     when :JUMP_UNLESS
       if @stack.pop
         @ip+=1
       else
-        @ip += @code[@ip]
+        @ip += @code[@ip] + 1
       end
     when :CALL
       fctn = "script_" + @code[@ip]
@@ -69,6 +81,29 @@ class SecondContract::Machine::Script
       @stack.push @stack.pop - @stack.pop
     when :PRODUCT
       do_series_op 1, :*
+    when :LT
+      do_ordered_op :<
+    when :GT
+      do_ordered_op :>
+    when :LE
+      do_ordered_op :<=
+    when :GE
+      do_ordered_op :>=
+    when :EQ
+      set = Set.new
+      n = @stack.pop
+      n.times do
+        set << @stack.pop
+      end
+      @stack.push set.count == 1
+    when :NE
+      # we want to make sure all of the values are unique
+      set = Set.new
+      n = @stack.pop
+      n.times do
+        set << @stack.pop
+      end
+      @stack.push set.count == n
     when :DIV
       d = @stack.pop
       n = @stack.pop
@@ -91,20 +126,14 @@ class SecondContract::Machine::Script
       name = @stack.pop
       value = @stack.last
       bits = name.split(/:/, 2)
-      case bits[0]
-      when "trait"
-        @objects[:this].set_trait(bits[1], value)
-      when "skill"
-        @objects[:this].set_skill(bits[1], value)
+      if PROPERTY_TYPES.include?(bits.first)
+        @objects[:this].send("set_" + bits.first, bits.last, value)
       end
     when :GET_THIS_PROP
       name = @stack.pop
       bits = name.split(/:/, 2)
-      case bits[0]
-      when "trait"
-        @stack.push @objects[:this].trait(bits[1], @objects)
-      when "skill"
-        @stack.push @objects[:this].skill(bits[1], @objects)
+      if PROPERTY_TYPES.include?(bits.first)
+        @stack.push @objects[:this].send(bits.first, bits.last, @objects)
       else
         @stack.push nil
       end
@@ -116,11 +145,8 @@ class SecondContract::Machine::Script
     when :GET_THIS_BASE_PROP
       name = @stack.pop
       bits = name.split(/:/, 2)
-      case bits[0]
-      when "trait"
-        @stack.push @objects[:this].get_trait(bits[1])
-      when "skill"
-        @stack.push @objects[:this].get_skill(bits[1])
+      if PROPERTY_TYPES.include?(bits.first)
+        @stack.push @objects[:this].send("get_" + bits.first, bits.last, @objects)
       else
         @stack.push nil
       end
@@ -142,16 +168,9 @@ class SecondContract::Machine::Script
     when :GET_PROP
       obj = @stack.pop
       name = @stack.pop
-      if !obj.nil?
-        bits = name.split(/:/, 2)
-        case bits[0]
-        when "trait"
-          @stack.push obj.trait(bits[1])
-        when "skill"
-          @stack.push obj.skill(bits[1])
-        else
-          @stack.push nil
-        end
+      bits = name.split(/:/, 2)
+      if PROPERTY_TYPES.include?(bits.first)
+        @stack.push obj.send(bits.first, bits.last, @objects)
       else
         @stack.push nil
       end
@@ -166,7 +185,10 @@ class SecondContract::Machine::Script
     # no :SET_PROP for another object -- objects can only set information on themselves
     # for now -- until we get a use case that requires this functionality
     else
-      @ip+=1 until @code[@ip].is_a?(Symbol)
+      puts "unknown opcode: #{code}"
+      until @code[@ip].is_a?(Symbol)
+        @ip += 1
+      end
     end
   end
 
@@ -186,6 +208,16 @@ private
       end
     else
       @stack.push init
+    end
+  end
+
+  def do_ordered_op op
+    n = @stack.pop
+    list = @stack.pop(n)
+    if list.include?(nil)
+      @stack.push false
+    else
+      @stack.push list.zip(list.drop(1)).all?{ |p| p.last.nil? || p.first.send(op, p.last)}
     end
   end
 end

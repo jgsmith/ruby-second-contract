@@ -8,8 +8,8 @@ class Character < ActiveRecord::Base
   validates_uniqueness_of :item
 
   def emit klass, text
-  	if !terminal.nil?
-  		terminal.emit klass, text
+    if !terminal.nil?
+      terminal.emit klass, text
     end
   end
 end

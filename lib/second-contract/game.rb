@@ -1,7 +1,7 @@
 require 'singleton'
 
 class SecondContract::Game
-  attr_accessor :banner
+  attr_accessor :banner, :constants
 
   include Singleton
 
@@ -32,7 +32,7 @@ class SecondContract::Game
 
   def config(config)
     @banner = "Welcome to #{config['name']}!\n"
-    @game_dir = Pathname.new(File.join(Dir.pwd, config['game'])).cleanpath.to_s
+    @game_dir = Pathname.new(File.join(Dir.pwd, config['game'] || 'game')).cleanpath.to_s
     if !File.directory?(@game_dir)
       puts "Game directory (#{config['game']} does not exist"
       exit 0
@@ -43,14 +43,15 @@ class SecondContract::Game
     end
 
     @compiler = SecondContract::Parser::Script.new
-    @parser   = SecondContract::Parser::Grammar.new
+    @parser   = Grammar.new
     @archetypes = {}
-    @pending_archetypes = SecondContract::Game::SortedHash.new(:ur)
+    @pending_archetypes = SecondContract::Game::SortedHash.new(:archetype)
     @pending_traits = SecondContract::Game::SortedHash.new(:mixins)
     @traits = {}
     @verbs = {}
     @adverbs = {}
     @comm_verbs = {}
+    @constants = config['constants'] || {}
 
     @events = []
 
@@ -71,7 +72,7 @@ class SecondContract::Game
       # now we need a dependency graph so we can order traits properly
       @pending_traits.sorted_keys.each do |name|
         info = @pending_traits[name]
-
+        info[:name] = name
         regularize_traits info
 
         item = Trait.new(info)
@@ -88,15 +89,20 @@ class SecondContract::Game
       # now we need a dependency graph so we can order archetypes properly
       @pending_archetypes.sorted_keys.each do |name|
         info = @pending_archetypes[name]
-        if info[:archetype] && !@archetypes[info[:archetype]]
-          puts "Archetype #{info[:archetype]} not defined, but required by #{name}"
+        if info[:archetype]
+          archetype_name = find_archetype_name name, info[:archetype]
+          if !@archetypes[archetype_name]
+            puts "Archetype #{archetype_name} not defined, but required by #{name}"
+          else
+            info[:archetype] = @archetypes[archetype_name]
+          end
         end
-        
+
+        info[:name] = name
         regularize_traits info
 
         item = Archetype.new(info)
         if !reported_errors? item
-          item.name = name
           @archetypes[name] = item
         end
         @pending_archetypes.delete name
@@ -136,6 +142,10 @@ class SecondContract::Game
 
   def comm_verbs
     @comm_verbs.keys
+  end
+
+  def archetypes
+    @archetypes.keys
   end
 
   ##
@@ -226,10 +236,11 @@ class SecondContract::Game
     end
   end
 
+  def register_archetype name, archetype
+    @archetypes[name] = archetype
+  end
+
   def get_archetype name
-    if @archetypes[name].nil?
-      compile_archetype(File.send(:join, [ @game_dir ] + name.split(':')) + ".sc")
-    end
     @archetypes[name]
   end
 
@@ -256,6 +267,7 @@ class SecondContract::Game
       # we want to run through each of the objects and then the environment of
       # objects[:this]
     end
+    puts parsed_message
   end
 
   def queue_event event
@@ -362,12 +374,38 @@ private
     end
   end
 
+  def find_name set, path, name
+
+    if set.include?(name)
+      return name
+    end
+
+    bits = path.split(/:/)
+    while !bits.empty?
+      bits.pop
+      if set.include?(bits.join(":") + ":" + name)
+        return bits.join(":") + ":" + name
+      end
+    end
+    nil
+  end
+
+  def find_trait_name path, name
+    find_name @traits, path, name
+  end
+
+  def find_archetype_name path, name
+    find_name @archetypes, path, name
+  end
+
   def regularize_traits info
-    info[:traits].reject{ |t| @traits.include?(t) || info[:qualities].include?(t) }.each do |t|
+    info[:traits].reject{ |t|
+      info[:qualities].include?(t) || !find_trait_name(info[:name], t).nil?
+    }.each do |t|
       info[:qualities][t] = [ :CONST, 'True' ]
     end
 
-    info[:traits] = info[:traits].select{|t| @traits.include?(t)}.inject({}) { |h, k| h[k] = @traits[k]; h }
+    info[:traits] = info[:traits].select{|t| @traits.include?(t)}.inject({}) { |h, k| h[k] = @traits[find_trait_name(info[:name], k)]; h }
   end
 
   def reported_errors? item
