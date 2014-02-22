@@ -9,6 +9,7 @@ module SecondContract::Parser
         :DIV     => [ "/",   4, :left ],
         :MOD     => [ "%",   4, :left ],
         :PLUS    => [ "+",   3, :left ],
+        :CONCAT  => [ "_",   3, :left ],
         :MINUS   => [ "-",   3, :left ],
         :LT      => [ "<",   2, :left ],
         :LE      => [ "<=",  2, :left ],
@@ -29,8 +30,6 @@ module SecondContract::Parser
 
       @binop_code = @binops.keys.inject({}) { |h, k| h[@binops[k][0]] = k; h }
       
-      @functions = %w(performs)
-
       @binop_regex = Regexp.new(
         "(" +
           @binops.keys.sort { |a,b| 
@@ -40,14 +39,6 @@ module SecondContract::Parser
             a.match(/[a-zA-Z]$/) ? a+"\\b" : a
           }.join("|") +
         ")"
-      )
-
-      @function_regex = Regexp.new(
-        "(" +
-          @functions.sort { |a,b|
-            b.length - a.length
-          }.join("|") +
-        ")\\b"
       )
     end
 
@@ -125,20 +116,22 @@ module SecondContract::Parser
           @scanner.terminate
         end
         yaml = YAML.load(body.sub(/\s*---\s*$/, ''))
-        hashKeys = yaml.keys.select{|k| yaml[k].is_a?(Hash)}
-        while hashKeys.count > 0
-          hashKeys.each do |parent|
-            yaml[parent].each do |k,v|
-              yaml[parent + ":" + k] = v
-            end
-            yaml.delete parent
-          end
+        if yaml
           hashKeys = yaml.keys.select{|k| yaml[k].is_a?(Hash)}
+          while hashKeys.count > 0
+            hashKeys.each do |parent|
+              yaml[parent].each do |k,v|
+                yaml[parent + ":" + k] = v
+              end
+              yaml.delete parent
+            end
+            hashKeys = yaml.keys.select{|k| yaml[k].is_a?(Hash)}
+          end
+          yaml.each do |k,v|
+            yaml[k] = [ :DATA, v ]
+          end
+          data = yaml
         end
-        yaml.each do |k,v|
-          yaml[k] = [ :DATA, v ]
-        end
-        data = yaml
       end
 
       while !@scanner.eos?
@@ -373,14 +366,16 @@ module SecondContract::Parser
     def parse_arg_list
       list = []
       _skip_all_space
+      if @scanner.scan(/[)]/)
+        return list
+      end
       while @scanner.matched != ')'
         if @scanner.eos?
           error("End of file unexpected in list definition")
           break
         end
         _skip_all_space
-        value = parse_expression(/[,)]/)
-        list << value
+        list << parse_expression(/[,)]/)
       end
       list
     end
@@ -596,35 +591,23 @@ module SecondContract::Parser
       # next stuff determines what we do - operator or something else?
       # we want to pull terms and operators out of the stream and then
       # organize them according to precedence
-      while (expect.nil? || !@scanner.scan(sep)) && (@scanner.scan(@binop_regex) || @scanner.scan(@function_regex))
-        op = @binop_code[fctn = @scanner[0].strip]
-        if op.nil?
-          # we're calling a function with the previous term as the primary object
-          args = parse_function_args(fctn)
-          obj = terms.pop
-          terms << [ :METHOD, obj, fctn ].concat(args)
+      while (expect.nil? || !@scanner.scan(sep)) && @scanner.scan(@binop_regex)
+        op = @binop_code[@scanner[0].strip]
+        
+        ops << op
+        _skip_all_space
+        term = parse_term
+        if term.nil?
+          error("Expected a term following '#{ops.last}'")
+          if !expect.nil?
+            @scanner.skip_until(expect)
+            _skip_space
+          end
+          break
         else
-          ops << @binop_code[@scanner[0].strip]
-          _skip_all_space
-          term = parse_term
-          if term.nil?
-            error("Expected a term following '#{ops.last}'")
-            if !expect.nil?
-              @scanner.skip_until(expect)
-              _skip_space
-            end
-            break
-          else
-            terms << term
-          end
-          _skip_space
+          terms << term
         end
-        if !expect.nil?
-          _skip_all_space
-          if !@scanner.scan(expect)
-            error("Expected #{sep}")
-          end
-        end
+        _skip_space
       end
 
       if terms.length == 1
@@ -693,7 +676,7 @@ module SecondContract::Parser
           else
             expressions << [ op, var, [ :CONST, 'True' ] ]
           end
-        when @scanner.scan(/unset\b/)
+        when @scanner.scan(/(un|re)set\b/)
           _skip_all_space
           if var = _var_name
             op = :UNSET_VAR
@@ -793,11 +776,11 @@ module SecondContract::Parser
       role = "any"
       if @scanner.scan(/as\b/)
         _skip_all_space
-        if @scanner.scan(/(direct|indirect|agent|instrument|environment|observer)\b/)
+        if @scanner.scan(/(direct|indirect|actor|instrument|environment|observer)\b/)
           role = @scanner[1]
           _skip_space
         else
-          error("Expected one of direct, indirect, agent, instrument, environment, or observer following 'as'", /[\n;]/)
+          error("Expected one of direct, indirect, actor, instrument, environment, or observer following 'as'", /[\n;]/)
         end
       end
       role

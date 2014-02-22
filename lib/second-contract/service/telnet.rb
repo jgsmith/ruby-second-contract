@@ -4,12 +4,16 @@ module SecondContract::Service
 end
 
 class SecondContract::Service::Telnet < EventMachine::Connection
+  attr_accessor :should_disconnect
+
   def initialize
-    @state = :START
+    @state = :start
     @character = nil
     @info = {}
     @echo = true
     @user = nil
+    @should_disconnect = false
+    @info = {}
   end
 
   def server
@@ -90,7 +94,7 @@ class SecondContract::Service::Telnet < EventMachine::Connection
   def receive_data str
     chars = str.unpack("C*")
     if chars[0] == 255
-      puts chars.join(",")
+      #puts chars.join(",")
       process_iac(chars.drop(1))
     else
 
@@ -104,7 +108,7 @@ class SecondContract::Service::Telnet < EventMachine::Connection
         @echo = false
       when :DISCONNECT
         send_message("\n\n")
-        unbind
+        @should_disconnect = true
       else
         iac_wont(:ECHO)
         # echo
@@ -127,26 +131,108 @@ class SecondContract::Service::Telnet < EventMachine::Connection
   end
 
   def send_message str
+    # TODO: format string for terminal width -- assume 80 characters for now
+    #       need a way to do pre-formatted text
+    # /------------
+    # \\-----------
+    # ???
+    #
+    # or /--- ... \\--- will force enough --- to match the width of the screen
+    #   and then wrap text based on something or other... ?
+    #
+    # or assume markdown formatting with links being for MXP (eventually)
+    # we may want to automatically add links as appropriate for items, but that
+    # can be in the emit_queued_info
+    #
     send_data(str.gsub(/\n/, "\x0d\x0a"))
   end
 
   def emit klass, text
     # eventually, color code based on klass
-    send_data(text + "\n")
+    if text.is_a?(Array)
+      text = text.join(" ")
+    end
+    klass_bits = klass.split(/:/, 2)
+    if klass.match(/:combat:/) && @user.get_setting(:telnet, :messages, :no_combat)
+      return
+    end
+    case klass_bits.first
+    when 'narrative'
+      ability = klass_bits.last.split(/:/).first
+      case ability
+      when "sight"
+        ability = 'see'
+      end
+      if @character.item.ability(ability + ":any", {this: @character.item})
+        send_message(text + "\n")
+      end
+    else
+      @info[klass_bits.first] ||= {}
+      @info[klass_bits.first][klass_bits.last] ||= []
+      @info[klass_bits.first][klass_bits.last] << text
+    end
+  end
+
+  def flush_messages
+    emit_queued_info
+  end
+
+  def emit_queued_info
+    if @info['env']
+      if @info['env']['title'] && !@info['env']['title'].empty?
+        send_message("\n" + @info['env']['title'].join(" ") + "\n")
+        @info['env']['title'].clear
+      end
+      if @info['env']['sight'] && !@info['env']['sight'].empty?
+        send_message("\n" + @info['env']['sight'].join(" ") + "\n")
+        @info['env']['sight'].clear
+      end
+      if @info['env']['smell'] && !@info['env']['smell'].empty?
+        send_message("\n" + @info['env']['smell'].join(" ") + "\n")
+        @info['env']['smell'].clear
+      end
+      if @info['env']['sound'] && !@info['env']['sound'].empty?
+        send_message("\n" + @info['env']['sound'].join(" ") + "\n")
+        @info['env']['sound'].clear
+      end
+      if @info['env']['exits'] && !@info['env']['exits'].empty?
+        send_message("\nObvious exits: " + @info['env']['exits'].join(" ") + "\n")
+        @info['env']['exits'].clear
+      end
+      if @info['env']['inventory'] && !@info['env']['inventory'].empty?
+        @info['env']['inventory'].clear
+      end
+
+    end
   end
 
   def normal str  
     if str.start_with?('%')
       # command
+      case str
+      when '%verbs'
+        send_message('Available verbs: ' + SecondContract::Game.instance.verbs.sort.join(", ") + "\n")
+      when '%adverbs'
+        send_message('Available adverbs: ' + SecondContract::Game.instance.adverbs.sort.join(", ") + "\n")
+      end
+      send_message("> ")
       :normal
     elsif str == 'quit'
       send_message("Please come again!\n")
       # leave game
       nil
     else
-      if !game.run_command(@character, str)
-        send_message("what?\n")
+      @character.item.reload
+      if !game.run_command(@character.item, str)
+        if @character.item.fail_message.blank?
+          send_message("what?\n")
+        else
+          send_message(@character.item.fail_message + "\n")
+        end
       end
+      @character.item.fail_message = ""
+      emit_queued_info
+      send_message("> ")
       :normal
     end
   end
@@ -191,6 +277,7 @@ class SecondContract::Service::Telnet < EventMachine::Connection
       nil
     else
       game.set_user_password(@info[:email], @info[:newpassword])
+      @user = game.authenticate_user(@info[:email], @info[:newpassword])
       send_message("\nNow we'll walk you through creating your first character.")
       send_message("\n\nWhat name do you wish? ")
       :new_character
@@ -254,7 +341,7 @@ class SecondContract::Service::Telnet < EventMachine::Connection
     end
 
     send_message("\nPreparing to enter the game as #{@info[:capname]}.\n")
-    @info[:archetype] = 'std:human'
+    @info[:archetype] = 'std:character'
     @character = create_character(@info)
     if !@character
       send_message("\nSomething went wrong somewhere. We can't seem to find your character.\nPlease try again later.\n\n")
@@ -282,19 +369,17 @@ class SecondContract::Service::Telnet < EventMachine::Connection
       if @chars.empty?
         send_message("\nNow we'll walk you through creating your first character.")
         send_message("\n\nWhat name do you wish? ")
-        @state = :NEW_CHARACTER
         :new_character
       else
         send_message("\n\nPlease select a character to play:\n")
-        @chars.each_with_index do |i,char|
-          send_message("#{i+1}) #{char.get_name}\n")
+        @chars.each_with_index do |char,i|
+          send_message("#{i+1}) #{char.item.detail('default:capName')}\n")
         end
 
         if @chars.length < 5
           send_message("\nOr \"N\" to create a new character. You may have up to 5 characters.\n")
         end
         send_message("\nPlease enter an option: ")
-        @state = :SELECT_CHARACTER
         :select_character
       end
     end
@@ -306,10 +391,9 @@ class SecondContract::Service::Telnet < EventMachine::Connection
       nil
     else
       case str
-      when /^[Nn]$/
+      when /[Nn]/
         if @chars.length < 5
           send_message("\n\nWhat name do you wish? ")
-          @state = :NEW_CHARACTER
           :new_character
         else
           send_message("\nThat isn't a valid option.\n")
@@ -321,7 +405,7 @@ class SecondContract::Service::Telnet < EventMachine::Connection
           send_message("\nThat isn't a valid option.\n")
           :select_character
         else
-          send_message("\nEntering the game as #{@chars[i-1].get_cap_name}.\n\n")
+          send_message("\nEntering the game as #{@chars[i-1].item.detail('default:capName')}.\n\n")
           @character = @chars[i-1]
           @chars = nil
           if enter_game
@@ -357,36 +441,24 @@ class SecondContract::Service::Telnet < EventMachine::Connection
   end
 
   def enter_game
-    if !@character.bind(self)
-      @character = nil
+    if SecondContract::Game.instance.enter_game(@character.item, self)
+      emit_queued_info
+      send_message("> ")
+      true
+    else
       false
     end
-    true
   end
 
   def create_character info
-    # we want to create an item and connect it to a character object
-    # that is connected to the logged in user
-    item = Item.new(
-      archetype: 'std:character',
-      traits: {
-        name: info[:name],
-        capName: info[:capName],
-      },
-      physical: {
-        gender: info[:gender],
-      }
-    )
-    @user.characters.build({
-      name: info[:name]
-    })
+    SecondContract::Game.instance.create_character(@user, info)
   end
 
   def unbind
-    if !@character.nil?
+    if @character
       @character.unbind
     end
+    close_connection
   	server.player_connections.delete(self)
-  	close_connection
   end
 end

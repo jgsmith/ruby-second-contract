@@ -5,10 +5,19 @@ require 'rspec/core/rake_task'
 require 'second-contract/activerecord/rake'
 
 RSpec::Core::RakeTask.new(:test) do |t|
-  t.pattern = 'test/{compilers,factories,machines,models,parsers}/**/*_tests.rb'
-  t.rspec_opts = '--format progress --require test_helper'
+  t.pattern = ['test/factories/**/*_factory.rb', 'test/{compilers,machines,models,parsers,systems}/**/*_tests.rb']
+  t.rspec_opts = '--format progress --require test_helper --color'
   t.ruby_opts = "-I./test"
 end
+
+# RSpec.configure do |config|
+#   config.include FactoryGirl::Syntax::Methods
+
+#   config.before(:suite) do
+#     FactoryGirl.lint
+#   end
+# end
+
 
 SecondContract::ActiveRecordTasks.database_file = 'config/database.yml'
 

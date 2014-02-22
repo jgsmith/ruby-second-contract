@@ -20,9 +20,12 @@ module SecondContract::Game::Systems::Physicals
     end
   end
 
+  def reset_physical key, objs = {}
+  end
+
   def set_physical key, value, objs = {}
     case key
-    when 'environment'
+    when 'environment', 'location', 'inventory', 'inventory:all', 'location:relation'
       # we don't set the environment here - this only reflects the
       # result of moving the object through other mechanisms
     when 'mass:base', 'volume:base', 'gravity:base', 'length:base'
@@ -91,6 +94,21 @@ module SecondContract::Game::Systems::Physicals
     when 'environment'
       # this is aimed at returning the item that contains this item
       get_environment
+    when 'inventory'
+      get_inventory
+    when 'inventiry:all'
+      get_all_inventory
+    when 'location'
+      get_location
+    when 'location:relation'
+      l = get_location
+      if l.nil?
+        ''
+      elsif l.is_a?(Item)
+        'in'
+      else
+        l.preposition.to_s.gsub(/_/, ' ')
+      end
     when 'volume:base'
       NO_VOLUME
     when 'mass:base'

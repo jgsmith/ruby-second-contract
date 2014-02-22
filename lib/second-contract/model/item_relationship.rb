@@ -1,6 +1,6 @@
 class ItemRelationship < ActiveRecord::Base
-  belongs_to :source, class_name: "Item", inverse_of: :item_relationship, polymorphic: true
-  belongs_to :target, class_name: "Item", inverse_of: :item_relationship, polymorphic: true
+  belongs_to :source, class_name: "Item", inverse_of: :target_relationships
+  belongs_to :target, class_name: "Item", inverse_of: :source_relationships
 
   # we would like an enum or similar if possible
   # otherwise, we'll need to settle for constants :-/
@@ -33,10 +33,9 @@ class ItemRelationship < ActiveRecord::Base
   def preposition= prep
     prep = prep.to_sym
     if @@prepositions.include?(prep)
-      write_attribute(:preposition, @@prepositions.indexOf(prep))
+      write_attribute(:preposition, @@prepositions.index(prep))
     else
       raise "Illegal preposition for relationship: '#{prep.to_s}'"
     end
   end
-
 end

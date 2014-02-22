@@ -32,3 +32,12 @@ Run the game with
 You can select an environment with the `--environment` switch. By default,
 the driver will use the `production` environment.
 
+
+## Directory Organization
+
+The various Ruby classes and modules are organized roughly following the
+scheme established in the DGD Kernel library:
+
+- SecondContract::IFLib - classes dealing with the interactive fiction component
+ -- Data:: - simple data-oriented classes
+ -- Sys:: - singleton classes providing services

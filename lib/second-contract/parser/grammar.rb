@@ -57,16 +57,15 @@ def merge_commands *args
   res
 end
 
-def add_verb v
-  @verbs << v
-end
-
-def add_communication_verb v
-  @comm_verbs << v
-end
-
-def add_movement_verb v
-  @movement_verbs << v
+def add_verb klass, v
+  case klass.to_sym
+  when :communication
+    @comm_verbs << v
+  when :movement
+    @movement_verbs << v
+  else
+    @verbs << v
+  end
 end
 
 def add_adverb av

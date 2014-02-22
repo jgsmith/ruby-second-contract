@@ -12,10 +12,10 @@ describe Grammar do
   describe "parsing simple verbs" do
     let(:look_parser) {
       p = Grammar.new
-      p.add_verb("look")
-      p.add_verb("look at")
-      p.add_verb("run")
-      p.add_verb("run away")
+      p.add_verb("action", "look")
+      p.add_verb("action", "look at")
+      p.add_verb("action", "run")
+      p.add_verb("action", "run away")
       p
     }
 
@@ -60,8 +60,8 @@ describe Grammar do
   describe "parsing verbs and adverbs together" do
     let(:adverb_parser) {
       p = Grammar.new
-      p.add_verb("run")
-      p.add_verb("run away")
+      p.add_verb("action", "run")
+      p.add_verb("action", "run away")
       p.add_adverb("quickly")
       p.add_adverb("softly")
       p.add_adverb("loudly")
@@ -131,8 +131,8 @@ describe Grammar do
   describe "parsing verbs with direct objects" do
     let(:grab_parser) {
       p = Grammar.new
-      p.add_verb("grab")
-      p.add_movement_verb("run")
+      p.add_verb("action", "grab")
+      p.add_verb("movement", "run")
       p.add_adverb("quickly")
       p
     }

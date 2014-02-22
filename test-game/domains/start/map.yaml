@@ -1,0 +1,27 @@
+scenes:
+  start:
+    archetype: std:room
+    details:
+      default:
+        name: Old Seadog
+        article: the
+        sight: "The inn radiates age and charm with its oak beam roof and many seafaring momentos secured firmly around the walls. Even the bar is a single thick oak slab, worn and chipped with years of service to rowdy sailors. An old glass window lets in a little light from outside. A game room is to the south and a parlor is to the southeast. A party room is at the bottom of a flight of stairs."
+        exits:
+          west:
+            target: yard
+      bar:
+        related-to:
+          'in': default
+        name: bar
+        article: the
+        sight: The bar is polished.
+  yard:
+    archetype: std:room
+    details:
+      default:
+        name: Old Seadog Yard
+        article: the
+        sight: The front yard of the Old Seadog is covered in gravel.
+        exits:
+          east:
+            target: start

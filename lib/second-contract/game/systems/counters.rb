@@ -23,6 +23,17 @@ module SecondContract::Game::Systems::Counters
     end
   end
 
+  def reset_counter name, objs = {}
+    counters[name] = nil
+    if !%w(max debt).include?(name.split(/:/).last)
+      counters[name+":debt"] = nil
+    end
+    if name.end_with?(':max')
+      counters[name[0..-5]] = nil
+      counters[name[0..-5]+":debt"] = nil
+    end
+  end
+
   def set_counter name, val, objs = {}
     case val
     when Fixnum, Float

@@ -6,7 +6,7 @@ class Archetype
   include SecondContract::Game::Systems
 
   attr_accessor :archetype, :physicals, :skills, :traits, :details,
-                :counters, :resources,
+                :counters, :resources, :flags,
                 :calculations, :abilities, :qualities, :errors, :name
 
   def initialize(tree)
@@ -18,8 +18,9 @@ class Archetype
     @physicals = {}
     @counters = {}
     @resources = {}
+    @flags = {}
 
-    @name = nil
+    @name = tree[:name]
 
     @archetype = nil
     @mixins = {}
@@ -53,6 +54,12 @@ class Archetype
           else
             @calculations["detail:#{bits.last}"] = SecondContract::Machine::Script.new(compiler.compile(parse_tree))
           end
+        when "flag", "flags"
+          if parse_tree.first == :DATA
+            set_flag(bits.last, parse_tree.last)
+          else
+            @calculations["flag:#{bits.last}"] = SecondContract::Machine::Script.new(compiler.compile(parse_tree))
+          end
         end
       end
 
@@ -67,15 +74,19 @@ class Archetype
           if parse_tree.first != :DATA
             set_detail(bits.last, v = SecondContract::Machine::Script.new(compiler.compile(parse_tree)).run({}))
           end
+        when "flag", "flags"
+          if parse_tree.first != :DATA
+            set_flag(bits.last, v = SecondContract::Machine::Script.new(compiler.compile(parse_tree)).run({}))
+          end
         end
       end
     end
 
     @calculations = compile_functions tree[:calculations]
     @validators = compile_functions tree[:validators]
-    @abilities = compile_functions tree[:abilities]
-    @qualities = compile_functions tree[:qualities]
-    @events = compile_functions tree[:reactions]
+    @abilities = compile_functions tree[:abilities], hash: false
+    @qualities = compile_functions tree[:qualities], hash: false
+    @events = compile_functions tree[:reactions], hash: false
 
     inherited = {
       calculations: {},
@@ -86,6 +97,7 @@ class Archetype
     
     if tree[:traits]
       tree[:traits].each_pair do |name, trait|
+        @mixins[name] = trait
         [:calculations, :qualities, :abilities].each do |type|
           trait.send(type).keys.each do |k|
             if inherited[type].include?(k)
@@ -171,12 +183,13 @@ class Archetype
 
   def calculate_all(prefix, name, objs = {})
     prefix = prefix.to_sym
+    name = '' if name == ':'
     if archetype
       info = archetype.calculate_all(prefix, name, objs)
     else
       info = {}
     end
-    info = @mixins.inject(info) { |m|
+    info = @mixins.inject(info) { |info,m|
       info.merge(m.last.calculate_all(prefix, name, objs))
     }
     if @calculations.include?(prefix)
@@ -187,13 +200,49 @@ class Archetype
     info
   end
 
+  def has_quality?(name)
+    @qualities.include?(name) ||
+    @mixins.any? {|m| m.last.has_quality?(name) } ||
+    archetype && archetype.has_quality?(name)
+  end
+
+  def quality(name, objs = {})
+    if @qualities.include?(name)
+      @qualities[name].run(objs)
+    elsif (mixin = @mixins.detect{|m| m.last.has_quality?(name)})
+      mixin.last.quality(name, objs)
+    elsif archetype
+      archetype.quality(name, objs)
+    else
+      false
+    end
+  end
+
+  def has_ability?(name)
+    @abilities.include?(name) ||
+    @mixins.any? {|m| m.last.has_ability?(name) } ||
+    archetype && archetype.has_ability?(name)
+  end
+
+  def ability(name, objs = {})
+    if @abilities.include?(name)
+      @abilities[name].run(objs)
+    elsif (mixin = @mixins.detect{|m| m.last.has_ability?(name)})
+      mixin.last.ability(name, objs)
+    elsif archetype
+      archetype.ability(name, objs)
+    else
+      false
+    end
+  end
+
   def has_event_handler? evt
     if @events.include?(evt)
       true
     elsif @mixins.any? { |t| t.last.has_event_handler? evt }
       true
     elsif archetype
-      archetype.include?(evt)
+      archetype.has_event_handler?(evt)
     else
       false
     end
@@ -211,8 +260,8 @@ class Archetype
       end
     elsif @events.include?(evt)
       @events[evt].run(args, event_prefix: path)
-    elsif (mixin = @traits.detect{ |m| m.last.has_event_handler? evt })
-      mixin.last.call_event_handler(evt, args, path + trait + "^^")
+    elsif (mixin = @mixins.detect{ |m| m.last.has_event_handler? evt })
+      mixin.last.call_event_handler(evt, args, path + mixin.first + "^^")
     elsif archetype
       archetype.call_event_handler(evt, args, path)
     else
@@ -224,22 +273,30 @@ class Archetype
     raise 'Archetypes do not have an environment'
   end
 
+  def get_location
+    raise 'Archetypes do not have a location'
+  end
+
   def trigger_event evt, objs
     # we don't run events for archetypes
   end
 
 protected
 
-  def compile_functions definitions
+  def compile_functions definitions, hash: true
     if definitions.is_a?(Hash)
       compiler = SecondContract::Compiler::Script.new
       definitions.keys.inject({}) { |h, k|
-        bits = k.split(/:/, 2)
-        bits[0] = bits.first.to_sym
-        if !h.include?(bits.first)
-          h[bits.first] = {}
+        if hash
+          bits = k.split(/:/, 2)
+          bits[0] = bits.first.to_sym
+          if !h.include?(bits.first)
+            h[bits.first] = {}
+          end
+          h[bits.first][bits.last] = SecondContract::Machine::Script.new(compiler.compile(definitions[k]))
+        else
+          h[k] = SecondContract::Machine::Script.new(compiler.compile(definitions[k]))
         end
-        h[bits.first][bits.last] = SecondContract::Machine::Script.new(compiler.compile(definitions[k]))
         h
       }
     else

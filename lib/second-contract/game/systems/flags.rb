@@ -26,6 +26,10 @@ module SecondContract::Game::Systems::Flags
     flags[key] = !!v ^ inverted
   end
 
+  def reset_flag key, objs = {}
+    flags[key] = false
+  end
+
 protected
 
   def initialize_flags

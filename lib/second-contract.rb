@@ -8,11 +8,18 @@ require 'yaml'
 I18n.enforce_available_locales = false
 
 class SecondContract
+  module IFLib
+    module Sys
+    end
+    module Data
+    end
+  end
+
   def self.config(argv = [], environment = "production")
     options = {
       environment: environment
     }
-    
+
     OptionParser.new do |opts|
       opts.banner = "Usage: driver [options] config.yml"
 
@@ -164,6 +171,12 @@ private
       @player_connections << conn
       conn.start
     end
+
+    EventMachine.add_periodic_timer(0.5) {
+      @player_connections.select{|s| s.should_disconnect }.each do |s|
+        s.unbind
+      end
+    }
   end
 
   def start_admin

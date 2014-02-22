@@ -23,8 +23,8 @@ is pear, banana
 
 can foo
 can bar if True
-can bar as agent if False
-can not baz as agent
+can bar as actor if False
+can not baz as actor
 can baz unless False
 
 calculates bar:baz with 1 + 2 * 3 + 4
@@ -69,6 +69,10 @@ reacts to bar with do
   sound:"Dripping water echoes down the corridor."@whisper+3
 end
 
+reacts to barboo with do
+  Emit("test:class", "Foo" _ Describe(physical:environment) )
+end
+
 # allows a comment at the end of the file
 
 EOT
@@ -91,7 +95,7 @@ EOT
     end
 
     it "allows abilities" do
-      expect(parse[:abilities].keys.sort).to eq %w(bar:agent bar:any baz:agent baz:any foo:any)
+      expect(parse[:abilities].keys.sort).to eq %w(bar:actor bar:any baz:actor baz:any foo:any)
     end
 
     it "allows calculations" do

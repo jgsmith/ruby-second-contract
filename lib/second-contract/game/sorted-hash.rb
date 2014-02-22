@@ -10,7 +10,7 @@ class SecondContract::Game::SortedHash < Hash
   alias tsort_each_node each_key
 
   def tsort_each_child node, &block
-    if !node.nil?
+    if !node.nil? && include?(node)
       node = fetch(node)
       if node.include?(@sort_key)
         node = node.fetch(@sort_key)

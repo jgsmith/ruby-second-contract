@@ -12,20 +12,34 @@ class SecondContract::Game::EventSet
   end
 
   def set_next_set e
-    if @next_set
-      e.set_next_set @next_set
+    if @next_set != e
+      n_set = @next_set
+      @next_set = e
+      if n_set
+        e.set_next_set n_set
+      end
+      e.set_previous_set self
     end
-    e.set_previous_set self
-    @next_set = e
+  end
+
+  def get_next_set
+    @next_set
   end
 
   def set_previous_set e
-    if @previous_set
-      @previous_set.set_next_set e
+    if @previous_set != e
+      p_set = @previous_set
+      @previous_set = e
+      if p_set
+        p_set.set_next_set e
+      end
+      e.set_next_set self
+      e.set_previous_set p_set
     end
-    e.set_next_set self
-    e.set_previous_set @previous_set
-    @previous_set = e
+  end
+
+  def get_previous_set
+    @previous_set
   end
 
   def get_guards f

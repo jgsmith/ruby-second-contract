@@ -17,6 +17,7 @@ class SecondContract::Compiler::Script
 private
 
   def _compile(parse_tree)
+    return if parse_tree.nil? || parse_tree.empty?
     case parse_tree.first
     when :LINE
       @line = parse_tree.last
@@ -32,39 +33,42 @@ private
         _compile(x)
       end
     when :DATA, :INT, :FLOAT, :STRING
-      push parse_tree[1]
+      _push parse_tree[1]
     when :CONST
-      push SecondContract::Game.instance.constants[parse_tree[1]]
+      _push SecondContract::Game.instance.constants[parse_tree[1]]
     when :SET_PROP
-      compile_simple_set :STORE_PROP
+      compile_simple_set :SET_THIS_PROP, parse_tree
     when :SET_VAR
-      compile_simple_set :STORE_VAR
+      compile_simple_set :SET_VAR, parse_tree
     when :UNSET_PROP
-      push parse_tree[1]
+      _push parse_tree[1]
       @code << :REMOVE_PROP
     when :UNSET_VAR
-      push parse_tree[1]
+      _push parse_tree[1]
       @code << :REMOVE_VAR
     when :VAR
-      push parse_tree[1]
-      @code << :FETCH_VAR
+      _push parse_tree[1]
+      @code << :GET_VAR
     when :PROP
       if parse_tree.length == 2
-        push parse_tree[1]
+        _push parse_tree[1]
         @code << :GET_THIS_PROP
-      else
-        push parse_tree[2]
-        push parse_tree[1]
-        @code << :GET_PROP
       end
     when :INDEX
       _compile(parse_tree[1])
       parse_tree.drop(2).each do |p|
-        _compile(p)
-        @code << :INDEX
+        if p.is_a?(Array)
+          _compile(p)
+          @code << :INDEX
+        else
+          _push p
+          @code << :GET_PROP
+        end
       end
     when :PLUS
       compile_series :SUM, parse_tree
+    when :CONCAT
+      compile_series :CONCAT, parse_tree
     when :MINUS
       compile_diff_series :SUM, :DIFFERENCE, parse_tree
     when :MPY
@@ -78,6 +82,19 @@ private
       (parse_tree.length-2).times do
         @code << :MOD
       end
+    when :AND
+      compile_series :AND, parse_tree
+    when :OR
+      compile_series :OR, parse_tree
+    when :CAN
+      _push parse_tree[1]
+      @code << :THIS_CAN
+    when :UHOH
+      _compile parse_tree[1]
+      @code << :UHOH
+    when :IS
+      _push parse_tree[1]
+      @code << :THIS_IS
     when :FUNCTION
       parse_tree.drop(2).reverse_each do |x|
         _compile(x)
@@ -102,31 +119,37 @@ private
     when :SENSATION
       _compile(parse_tree[4])
       _compile(parse_tree[3])
-      push parse_tree[2]
-      push parse_tree[1]
+      _push parse_tree[2]
+      _push parse_tree[1]
       @code << :SENSATION
+    when :DEFAULT
+      _compile(parse_tree[1])
+      @code << :DUP
+      _push nil
+      _push 2
+      @code << :EQ
+      loc = _jump_unless
+      _drop
+      _compile(parse_tree[2])
+      _jump_from(loc)
     when :WHEN
       # each part is [ cond, code ] except last, which is code (if else) or nil
       jump_locs = []
       parse_tree[1..parse_tree.length-2].each do |it|
         _compile(it.first)
-        @code << :JUMP_UNLESS
-        loc = @code.length
-        @code << 0
+        loc = _jump_unless
         _compile(it.last)
-        @code[loc] = @code.length - loc - 1 + 2
-        @code << :JUMP
-        jump_locs << @code.length
-        @code << 0
+        jump_locs << _jump
+        _jump_from(loc)
       end
-      if !parse_tree.last.nil?
+      if !parse_tree.last.nil? && !parse_tree.last.empty?
         _compile(parse_tree.last)
       end
       jump_locs.each do |loc|
-        @code[loc] = @code.length - loc - 1
+        _jump_from(loc)
       end
     else
-      puts parse_tree.first.to_yaml
+      #puts parse_tree.first.to_yaml
       raise "Unknown operation (#{parse_tree.first}) at #{@filename} line #{@line} column #{@column}"
     end
   end
@@ -135,8 +158,7 @@ private
     parse_tree.drop(1).each do |x|
       _compile(x)
     end
-    @code << :PUSH
-    @code << parse_tree.length-1
+    _push parse_tree.length-1
     @code << op
   end
 
@@ -146,8 +168,7 @@ private
       parse_tree.drop(2).each do |x|
         _compile(x)
       end
-      @code << :PUSH
-      @code << parse_tree.length-2
+      _push parse_tree.length-2
       @code << seriesOp
     else
       _compile(parse_tree[2])
@@ -156,14 +177,41 @@ private
   end
 
   def compile_simple_set op, parse_tree
-    _compile(parse_tree[2])
-    @code << :PUSH
-    @code << parse_tree[1]
+    if parse_tree.length > 2
+      _compile(parse_tree[2])
+    else
+      _push true
+    end
+    _push parse_tree[1]
     @code << op
   end
 
-  def push val
+  def _push val
     @code << :PUSH
     @code << val
+  end
+
+  def _dup
+    @code << :DUP
+  end
+
+  def _drop
+    @code << :DROP
+  end
+
+  def _jump_unless
+    @code << :JUMP_UNLESS
+    @code << 0
+    @code.length
+  end
+
+  def _jump
+    @code << :JUMP
+    @code << 0
+    @code.length
+  end
+
+  def _jump_from(loc)
+    @code[loc-1] = @code.length - loc
   end
 end

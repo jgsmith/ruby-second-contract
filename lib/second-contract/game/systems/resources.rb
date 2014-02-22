@@ -15,6 +15,15 @@ module SecondContract::Game::Systems::Resources
     end
   end
 
+  def reset_resource name, objs = {}
+    if name.end_with?(":max")
+      resources[name] = nil
+      resources[name[0..-5]] = nil
+    else
+      resources[name] = resource(name+":max", objs)
+    end
+  end
+
   def get_resource name
     if resources.include?(name)
       resources[name]

@@ -8,12 +8,22 @@ class SecondContract::Machine::Script
   attr_accessor :code
   def initialize code
     @code = code + [ :DONE ]
+    @message_parser = SecondContract::Parser::Message.new
   end
 
   def run objs = {}, env = {}
     start
     @objects = objs
     @env = env
+    @objects.each do |key, objs|
+      if objs.is_a?(Array)
+        objs.each do |obj|
+          obj.try(:reload)
+        end
+      else
+        objs.try(:reload)
+      end
+    end
     step until @done
     ret = @stack.last
     @stack.clear
@@ -29,8 +39,8 @@ class SecondContract::Machine::Script
     @stack_marks = []
   end
 
-  def pop
-    @stack.pop
+  def pop n = 1
+    @stack.pop n
   end
 
   def push v
@@ -42,9 +52,17 @@ class SecondContract::Machine::Script
   end
 
   def step
+    if @ip > @code.length
+      @done = true
+      return
+    end
     code = @code[@ip]
     @ip += 1
     case code
+    when :DUP
+      @stack.push @stack.last
+    when :DROP
+      @stack.pop
     when :MARK
       @stack_marks.push @stack.length
     when :CLEAR
@@ -67,20 +85,47 @@ class SecondContract::Machine::Script
       else
         @ip += @code[@ip] + 1
       end
+    when :THIS_CAN
+      ability = @stack.pop
+      @stack.push @objects[:this].ability(ability, @objects)
+    when :THIS_IS
+      quality = @stack.pop
+      @stack.push @objects[:this].quality(quality, @objects)
+    when :UHOH
+      @objects[:this].fail_message = @stack.pop
+      @stack.push false
+    when :INDEX
+      base, idx = @stack.pop(2)
+      case base
+      when Array
+        @stack.push base[idx.to_i]
+      when Hash
+        @stack.push base[idx]
+      else
+        @stack.push nil
+      end
     when :CALL
       fctn = "script_" + @code[@ip]
       @ip += 1
-      if objs[:this].respond_to? fctn
-        @stack.push objs[:this].send(fctn, self, objs, env)
+      fctn += @code[@ip].to_s
+      @ip += 1
+      if @objects[:this].respond_to? fctn
+        @stack.push @objects[:this].send(fctn, self, @objects)
       else
         @stack.push nil
       end
     when :SUM
       do_series_op 0, :+
+    when :CONCAT
+      do_series_op "", :+
     when :DIFFERENCE
       @stack.push @stack.pop - @stack.pop
     when :PRODUCT
       do_series_op 1, :*
+    when :AND
+      do_series_op true, :and
+    when :OR
+      do_series_op false, :or
     when :LT
       do_ordered_op :<
     when :GT
@@ -90,20 +135,16 @@ class SecondContract::Machine::Script
     when :GE
       do_ordered_op :>=
     when :EQ
-      set = Set.new
-      n = @stack.pop
-      n.times do
-        set << @stack.pop
-      end
-      @stack.push set.count == 1
+      do_ordered_op :==
     when :NE
       # we want to make sure all of the values are unique
-      set = Set.new
+      list = []
       n = @stack.pop
       n.times do
-        set << @stack.pop
+        i = @stack.pop
+        list << i if !list.include?(i)
       end
-      @stack.push set.count == n
+      @stack.push list.length == n
     when :DIV
       d = @stack.pop
       n = @stack.pop
@@ -128,14 +169,28 @@ class SecondContract::Machine::Script
       bits = name.split(/:/, 2)
       if PROPERTY_TYPES.include?(bits.first)
         @objects[:this].send("set_" + bits.first, bits.last, value)
+        if @objects[:this].respond_to?(:"save!")
+          @objects[:this].save!
+        end
       end
     when :GET_THIS_PROP
       name = @stack.pop
       bits = name.split(/:/, 2)
-      if PROPERTY_TYPES.include?(bits.first)
+      if bits.length == 1
+        @stack.push @objects[bits.first.to_sym]
+      elsif PROPERTY_TYPES.include?(bits.first)
         @stack.push @objects[:this].send(bits.first, bits.last, @objects)
       else
         @stack.push nil
+      end
+    when :REMOVE_PROP
+      name = @stack.pop
+      bits = name.split(/:/, 2)
+      if PROPERTY_TYPES.include?(bits.first)
+        @objects[:this].send("reset_" + bits.first, bits.last, @objects)
+        if @objects[:this].respond_to?(:"save!")
+          @objects[:this].save!
+        end
       end
     ##
     # GET_THIS_BASE_PROP
@@ -157,8 +212,8 @@ class SecondContract::Machine::Script
     #
     when :GET_OBJ
       name = @stack.pop
-      if @objects.include?(name)
-        @stack.push @objects[name] 
+      if @objects.include?(name.to_sym)
+        @stack.push @objects[name.to_sym]
       else
         @stack.push nil
       end
@@ -166,11 +221,19 @@ class SecondContract::Machine::Script
       name = @stack.pop
       @stack.push @vars[name]
     when :GET_PROP
-      obj = @stack.pop
       name = @stack.pop
+      obj = @stack.pop
       bits = name.split(/:/, 2)
-      if PROPERTY_TYPES.include?(bits.first)
-        @stack.push obj.send(bits.first, bits.last, @objects)
+      if bits.length == 1
+        @stack.push @objects[bits.first.to_sym]
+      elsif PROPERTY_TYPES.include?(bits.first)
+        if obj.is_a?(Array)
+          @stack.push obj.collect{|o| o.send(bits.first, bits.last, @objects) }
+        elsif obj.nil?
+          @stack.push nil
+        else
+          @stack.push obj.send(bits.first, bits.last, @objects)
+        end
       else
         @stack.push nil
       end
@@ -185,8 +248,8 @@ class SecondContract::Machine::Script
     # no :SET_PROP for another object -- objects can only set information on themselves
     # for now -- until we get a use case that requires this functionality
     else
-      puts "unknown opcode: #{code}"
-      until @code[@ip].is_a?(Symbol)
+      puts "unknown opcode at #{@ip-1}: #{code}"
+      until @code[@ip].nil? || @code[@ip].is_a?(Symbol)
         @ip += 1
       end
     end
@@ -201,10 +264,25 @@ private
   def do_series_op init, op
     n = @stack.pop
     if n > 0
-      if @stack.last.is_a?(Fixnum)
-        @stack.push @stack.pop(n).inject(init.to_i, op)
+      case init
+      when String
+        @stack.push @stack.pop(n).flatten.compact.inject("", op)
+      when true, false
+        case op
+        when :and
+          @stack.push @stack.pop(n).flatten.compact.all? { |i| i }
+        when :or
+          @stack.push @stack.pop(n).flatten.compact.any? { |i| i }
+        else
+          @stack.pop(n)
+          @stack.push false
+        end
       else
-        @stack.push @stack.pop(n).inject(init.to_f, op)
+        if @stack.last.is_a?(Fixnum)
+          @stack.push @stack.pop(n).compact.inject(init.to_i, op)
+        else
+          @stack.push @stack.pop(n).compact.inject(init.to_f, op)
+        end
       end
     else
       @stack.push init

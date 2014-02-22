@@ -24,6 +24,9 @@ module SecondContract::Game::Systems::Skills
     end
   end
 
+  def reset_skill name, objs = {}
+  end
+
   def set_skill name, val, objs = {}
     val = val.try(to_i)
     if val.is_a?(Fixnum) && val > 0 && validate(:skill, name, val, objs)

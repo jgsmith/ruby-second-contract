@@ -7,6 +7,7 @@ class CreateItemRelationships < ActiveRecord::Migration
       t.string     :detail, default: 'default'  # for scenes
       t.integer    :x       # for paths and surfaces/terrains
       t.integer    :y       # for terrains
+      t.boolean    :hidden, :null => false, :default => false # used when logged out
     end
   end
 end

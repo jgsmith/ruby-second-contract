@@ -25,8 +25,22 @@ test:
   database: db/test.sqlite3
   pool: 5
   timeout: 5000
+  game: ./test-game
 
 all:
   constants:
     "True": true
     "False": false
+  start:
+    target: start:scene:start
+    detail: floor
+    preposition: 'on'
+    position: 'standing'
+  messages:
+    movement:
+      normal:
+        'in': '<actor> <arrive>.'
+        'out': '<actor> <leave>.'
+      magic:
+        'in': '<actor> <arrive> in a puff of smoke.'
+        'out': '<actor> <leave> in a puff of smoke.'

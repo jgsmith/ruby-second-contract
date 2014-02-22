@@ -19,6 +19,34 @@ class Graph
     def has_vertex?(name)
         @vertices.include?(name)
     end
+
+    def vertices_within(name, distance)
+        @v_seen = []
+        _vertices_within(name, distance).sort_by(&:last).collect(&:first)
+    end
+
+    def _vertices_within(name, distance)
+        ret = []
+        @vertices[name].each_pair do |v, d|
+            if !@v_seen.include?(v)
+                @v_seen << v
+                if d <= distance
+                    ret << [ v, d ]
+                    ret.concat(_vertices_within(v, distance - d).collect{ |p| p[1] += d; p })
+                end
+            end
+        end
+        ret
+    end
+
+    def bidirectional!
+        @vertices.keys.each do |vertex|
+            @vertices[vertex].each do |edge|
+                @vertices[edge.first] ||= {}
+                @vertices[edge.first][vertex] ||= edge.last
+            end
+        end
+    end
     
     def shortest_path(start, finish)
         maxint = (2**(0.size * 8 -2) -1)

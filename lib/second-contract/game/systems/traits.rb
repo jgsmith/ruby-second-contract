@@ -20,8 +20,12 @@ module SecondContract::Game::Systems::Traits
     elsif archetype
       archetype.get_trait(name)
     else
-      0
+      nil
     end
+  end
+
+  def reset_trait name, objs = {}
+    traits[name] = nil
   end
 
   def set_trait name, val
