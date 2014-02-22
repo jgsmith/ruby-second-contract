@@ -1,0 +1,237 @@
+scenes:
+  start:
+    archetype: std:room
+    flags:
+      - no-hunger
+    traits:
+      ambient-light: 40
+      terrain: indoors-window
+      climate: indoors
+    details:
+      default:
+        name: Old Seadog
+        article: the
+        smell: The faint smell of rum permeates the inn.
+        sight:
+          day: >
+            The inn radiates age and charm with its oak beam roof and many
+            seafaring momentos secured firmly around the walls. Even the bar
+            is a single thick oak slab, worn and chipped with years of 
+            service to rowdy sailors. An old glass window lets in a little 
+            light from outside. A game room is to the south and a parlor is 
+            to the southeast. A party room is at the bottom of a flight of 
+            stairs.
+          night: >
+            The inn radiates age and charm with its oak beam roof and many
+            seafaring momentos secured firmly around the walls. Even the bar 
+            is a single thick oak slab, worn and chipped with years of 
+            service to rowdy sailors. A game room is to the south and a 
+            parlor is to the southeast. A party room is at the bottom of a 
+            flight of stairs."
+      menu:
+        noun:
+          - menu
+        article: the
+        sight: A menu hangs behind the bar. Perhaps you should read it.
+        read: |
+          /--------------------------------------------\\
+          |                                            |
+          |     First class ale:          22 credit    |
+          |     Special of the house:    135 credit    |
+          |     Firebreather:            180 credit    |
+          |     Spring water:             30 credit    |
+          |     Regular coffee:           45 credit    |
+          |     Imported espresso:        90 credit    |
+          |     Ham sandwich:             60 credit    |
+          |                                            |
+          |     Slot machine token:        5 credit    |
+          |                                            |
+          \\--------------------------------------------/
+      window:
+        noun:
+          - window
+        adjective:
+          - glass
+          - old
+        article: the
+        related-to:
+          in: default
+        sight: >
+          The glass in the window distorts everything outside. You can 
+          barely tell if the sky is light or dark.
+      momentos:
+        name: inn walls
+        article: the
+        noun:
+          - wall
+          - walls
+        adjective:
+          - inn
+          - north
+          - south
+          - east
+          - west
+        related-to:
+          in: default
+        inventory:
+          'on':
+            treasures:
+              fishing-net: 1
+            treasures-chance: 100
+          against:
+            bin:
+              bin: 1
+            bin-chance: 100
+        allowed-relations:
+          'on':
+            - hanging
+          against:
+            - leaning
+            - sitting
+            - standing
+        max-weight: "50 pounds"
+        max-volume: "100 liters"
+        sight: "{{if anything hanging on detail:momentos}}The wall is covered in various momentos from visitors of years past.{{else}}Faint outlines show where things once hung on the walls.{{endif}}"
+      bar:
+        noun:
+          - bar
+          - slab
+        adjective:
+          - thick
+          - oak
+        article: the
+        name: bar
+        related-to:
+          in: default
+        allowed-relations:
+          behind:
+            - standing
+            - kneeling
+            - crouching
+            - lying
+            - sitting
+          'on':
+            - standing
+            - sitting
+            - kneeling
+            - crouching
+            - lying
+        exits:
+          east:
+            target: behind
+        npcs:
+          behind:
+            lars:
+              lars: 1
+            lars-chance: 100
+        sight: >
+          The bar is made of a thick oak slab. It looks to be as old as the 
+          inn.
+      ceiling:
+        noun:
+          - ceiling
+          - roof
+          - beam
+          - beams
+        adjective:
+          - beam
+          - oak
+        article: the
+        name: ceiling
+        article: the
+        related-to:
+          in: default
+        sight: >
+          The exposed rafters are made of thick oak beams varnished with age.
+        smell: "You can't reach the roof beams to smell them."
+      floor:
+        name: floor
+        article: the
+        noun:
+          - floor
+        adjective:
+          - wood
+          - wooden
+          - polished
+        article: the
+        related-to:
+          in: default
+        allowed-relations:
+          'on':
+            - standing
+            - lying
+            - kneeling
+            - crouching
+            - sitting
+        inventory:
+          'on':
+            furniture:
+              - item: fireplace
+                position: sitting
+            weapon:
+              - item: poker
+                position: lying
+        sight: >
+          The floor is made of wood that has been polished by the years of
+          people walking on it. It looks pretty solid.
+        smell: >
+          The floor smells faintly of feet, shoes, gravel, and grass if you 
+          get close enough.
+        exits:
+          south:
+            target: game
+          southeast:
+            target: parlor
+          west:
+            target: inn-yard
+            detail: gravel
+            preposition: 'on'
+            guard: seadog
+          down:
+            target: seadog-party
+  inn-yard:
+    archetype: std:room
+    details:
+      default:
+        name: front yard of the Old Seadog
+        article: the
+        sight:
+          day: >
+            Small gravel covers the yard of the Old Seadog Inn. The inn
+            itself stands to the east. To the north, a narrow gateway leads
+            to the main road through Old Town. A small path to the south 
+            leads to an old ruined church
+          night: >
+            Small gravel covers the yard of the Old Seadog Inn. Light spills
+            from the door of the inn to the east. To the north, a narrow 
+            gateway leads to the main road through Old Town. A small path 
+            heads into darkness to the south.
+      gravel:
+        name: gravel
+        article: the
+        related-to:
+          'in': default
+        noun:
+          - gravel
+          - ground
+        sight: The gravel covers the yard of the inn. Nothing could be easier to maintain.
+        exits:
+          east:
+            target: start
+            detail: floor
+            preposition: 'on'
+      inn:
+        name: Old Seadog
+        related-to:
+          near: default
+        noun:
+          - inn
+          - seadog
+        adjective:
+          - old
+        enter:
+          target: start
+          detail: floor
+          preposition: 'on'
+        article: the
+        sight: "The run down inn has seen better days, but it still welcomes travelers."

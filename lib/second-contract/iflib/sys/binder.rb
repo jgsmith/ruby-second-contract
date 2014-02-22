@@ -78,7 +78,7 @@ private
 
     sources = [].concat(ob_list)
     phrases.each do |phrase|
-      result = _match_object_in_array( phrase[:preposition] || [ :in, :on ], phrase, sources, type, actor)
+      result = _match_object_in_array( phrase[:preposition] || [ :none, :in, :on, :near, :worn_by, :held_by, :close, :against, :before, :beside, :over ], phrase, sources, type, actor)
       result.objects.each do |ob|
         if ob.is_a?(ItemDetail)
           ob.preposition = 'in'

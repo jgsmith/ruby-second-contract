@@ -49,7 +49,7 @@ class Item < ActiveRecord::Base
   def inspect
     "#{archetype_name}##{id}"
   end
-  
+
   def item
     self
   end

@@ -30,7 +30,7 @@ module SecondContract::Game::Systems::Details
     # we want to collect all of the information we have about this detail
     if key.match(/^[^:]+:enter$/)
       # return an object describing the location
-      target = get_detail("#{key}:target", objs)
+      target = detail("#{key}:target", objs)
       if target.nil?
         target_obj = self
       else
@@ -38,14 +38,16 @@ module SecondContract::Game::Systems::Details
         if target_obj.nil?
           bits = target.split(/:/)
           if bits.length > 1
-            d = Domain.find(:name => bits.first)
-            target_obj = d.get_item("scene:#{bits.drop(1).join(":")}")
+            d = Domain.find_by(:name => bits.first).first
+            if d
+              target_obj = d.get_item("scene:#{bits.drop(1).join(":")}")
+            end
           end
         end
       end
-      target_detail = info["#{key}:detail"] || 'default'
-      target_prep = info["#{key}:preposition"] || 'in'
-      if !target_obj.nil?
+      target_detail = detail("#{key}:detail", objs) || 'default'
+      target_prep = detail("#{key}:preposition", objs) || 'in'
+      if target_obj
         return ItemDetail.new(target_obj, target_detail, target_prep)
       end
       return nil
