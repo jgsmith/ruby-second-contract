@@ -93,5 +93,4 @@ reacts to post-scan:brief as actor with
     Emit("env:sight", $description _ ". " _ Describe(physical:environment) )
     Emit("env:exits", ItemList(Keys(Exits(physical:location))))
     # now we can list items/mobs nearby/in the scene
-    True
   end

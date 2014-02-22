@@ -1,17 +1,17 @@
 ---
 verbs: 
-  - stand
-brief: Stand up
+  - crouch
+brief: crouch
 see also: 
+  - stand
   - sit
   - kneel
-  - crouch
 actions:
-  - act:stand
+  - act:crouch
 published: true
 class: action
 ---
 
 This command allows you to change your position to that of 
-standing regardless of your current position.
+crouching regardless of your current position.
 

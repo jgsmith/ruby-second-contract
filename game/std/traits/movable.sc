@@ -90,6 +90,8 @@ reacts to post-act:enter as actor with
     if MoveTo("normal", direct.detail:default:enter) then
       :"<actor:name> <enter> <direct>."
     else
+      reset flag:brief-scan
+      reset flag:scanning
       :"<actor:name> <try> to enter <direct> but <actor:fail>."
     end
   end

@@ -31,9 +31,7 @@ module SecondContract::Game::Systems::Details
     if key.match(/^[^:]+:enter$/)
       # return an object describing the location
       target = detail("#{key}:target", objs)
-      if target.nil?
-        target_obj = self
-      else
+      if !target.nil?
         target_obj = self.domain.get_item("scene:#{target}")
         if target_obj.nil?
           bits = target.split(/:/)
@@ -45,10 +43,10 @@ module SecondContract::Game::Systems::Details
           end
         end
       end
-      target_detail = detail("#{key}:detail", objs) || 'default'
-      target_prep = detail("#{key}:preposition", objs) || 'in'
-      if target_obj
-        return ItemDetail.new(target_obj, target_detail, target_prep)
+      target_detail = detail("#{key}:detail", objs)
+      target_prep = detail("#{key}:preposition", objs)
+      if target_obj || target_detail || target_prep
+        return ItemDetail.new(target_obj || self, target_detail || 'default', target_prep || 'in')
       end
       return nil
     end

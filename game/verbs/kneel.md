@@ -2,7 +2,8 @@
 verbs: 
   - kneel
 brief: kneel
-see also: 
+see also:
+  - crouch
   - stand
   - sit
 actions:

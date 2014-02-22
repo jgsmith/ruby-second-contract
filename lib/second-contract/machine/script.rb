@@ -80,10 +80,19 @@ class SecondContract::Machine::Script
     when :JUMP
       @ip += @code[@ip] + 1
     when :JUMP_UNLESS
-      if @stack.pop
-        @ip+=1
-      else
+      v = @stack.pop
+      f = case v
+          when Array
+            v.compact.empty?
+          when Hash
+            v.empty?
+          else
+            !v
+          end
+      if f
         @ip += @code[@ip] + 1
+      else
+        @ip += 1
       end
     when :THIS_CAN
       ability = @stack.pop

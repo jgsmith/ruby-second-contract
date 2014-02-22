@@ -253,14 +253,11 @@ class SecondContract::Game
 
   def compile_verb fname
     fname = Pathname.new(fname).cleanpath.to_s
-    puts "loading verb from #{fname}"
     if is_file?(fname)
       tree = @compiler.parse_verb(IO.read(fname))
-      puts tree.to_yaml
       verb = SecondContract::IFLib::Data::Verb.new(tree)
       if !verb.disabled?
         verb.verbs.each do |v|
-          puts "Adding #{v} to the list of verbs"
           @verbs[v] = [] unless @verbs[v]
           @verbs[v] << verb
         end
