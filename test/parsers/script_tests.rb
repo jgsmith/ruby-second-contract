@@ -90,8 +90,8 @@ EOT
       expect(parse[:data].keys.sort).to eq %w(traits:bar traits:foo)
     end
 
-    it "allows named traits" do
-      expect(parse[:traits].sort).to eq %w(apple banana pear)
+    it "allows named mixin qualities" do
+      expect(parse[:mixins].sort).to eq %w(apple banana pear)
     end
 
     it "allows abilities" do

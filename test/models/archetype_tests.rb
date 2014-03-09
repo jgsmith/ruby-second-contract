@@ -7,7 +7,7 @@ describe Archetype do
   describe "#new" do
     let(:archetype) {
       parse = parser.parse_archetype("")
-      parse[:traits] = {}
+      parse[:mixins] = {}
       Archetype.new(parse)
     }
 
@@ -35,7 +35,7 @@ describe Archetype do
 trait:foo starts as 5
 calculates trait:bar with trait:foo * 2
 EOT
-      parse[:traits] = {}
+      parse[:mixins] = {}
       Archetype.new(parse)
     }
 
@@ -48,13 +48,23 @@ EOT
   end
 
   describe "#calculate" do
+    let(:quality) {
+      parse = parser.parse_mixin(<<EOT)
+calculates trait:boo with trait:baz + 3
+EOT
+      parse[:mixins] = {}
+      parse[:name] = 'foo'
+      Quality.new(parse)
+    }
     let(:archetype) {
       parse = parser.parse_archetype(<<EOT)
 trait:foo starts as 6
 calculates trait:bar with trait:foo * 2
 calculates trait:baz with 5
 EOT
-      parse[:traits] = {}
+      parse[:mixins] = {
+        'foo' => quality,
+      }
       Archetype.new(parse)
     }
 
@@ -70,6 +80,7 @@ EOT
       expect(archetype.trait("baz", objects)).to eq 5
       expect(archetype.trait("foo", objects)).to eq 6
       expect(archetype.trait("bar", objects)).to eq 12
+      expect(archetype.trait("boo", objects)).to eq 8
     end
   end
 
@@ -97,7 +108,7 @@ details:
         position: lying
 ---
 EOT
-      parse[:traits] = {}
+      parse[:mixins] = {}
       Archetype.new(parse)
     }
 
@@ -113,7 +124,7 @@ details:
       night: "The loggy of the Alien Tech Museum is spacious. A model of a flying saucer hangs from the ceiling, still as can be waiting for morning. A thin layer of white dust covers the floor."
 ---
 EOT
-      parse[:traits] = {}
+      parse[:mixins] = {}
       Archetype.new(parse)
     }
 

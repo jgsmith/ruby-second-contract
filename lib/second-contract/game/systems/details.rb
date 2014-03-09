@@ -28,7 +28,7 @@ module SecondContract::Game::Systems::Details
 
   def get_detail key, objs = {}
     # we want to collect all of the information we have about this detail
-    if key.match(/^[^:]+:enter$/)
+    if key.match(/^[^:]+:(enter|(jump|climb):[^:]+)$/)
       # return an object describing the location
       target = detail("#{key}:target", objs)
       if !target.nil?
@@ -61,6 +61,10 @@ module SecondContract::Game::Systems::Details
 
   def set_detail key, val, objs = {}
     if !key.match(/^[^:]+:enter$/) && validate(:detail, key, val, objs)
+      old_val = get_detail(key, objs)
+      if old_val != val
+        trigger_event("change:detail:#{key}", objs.merge({previous: old_val, value: val}))
+      end
       details[key] = val
     end
   end
@@ -91,10 +95,8 @@ module SecondContract::Game::Systems::Details
   # TODO: move graph construction out so it can be built with all details
   #       and cached
   #
-  def describe_detail key: 'default', sense: 'sight', seasons: [], times: [], objs: {}
-    description = []
-    info = get_all_detail(key, objs)
-    if info
+  def appropriate_detail_string key: 'default', sense: 'sight', seasons: [], times: [], objs: {}, info: []
+    if info && !info.empty?
       # we want to get the right sense - based on seasons, times, and sense
       # #{sense}:#{season}:#{time}
       # #{sense}:#{season}
@@ -104,53 +106,58 @@ module SecondContract::Game::Systems::Details
       seasons.each do |season|
         times.each do |time|
           if info["#{season}:#{sense}:#{time}"]
-            description << info["#{season}:#{sense}:#{time}"]
-            break
+            return info["#{season}:#{sense}:#{time}"]
           end
         end
         break if !description.empty?
       end
-      if description.empty?
-        seasons.each do |season|
-          if info["#{season}:#{sense}"]
-            description << info["#{season}:#{sense}"]
-            break
-          end
+      seasons.each do |season|
+        if info["#{season}:#{sense}"]
+          return info["#{season}:#{sense}"]
         end
       end
-      if description.empty?
-        times.each do |time|
-          if info["#{sense}:#{time}"]
-            description << info["#{sense}:#{time}"]
-            break
-          end
+   
+      times.each do |time|
+        if info["#{sense}:#{time}"]
+          return info["#{sense}:#{time}"]
         end
       end
-      if description.empty?
-        if info[sense]
-          description << info[sense]
-        end
+      if info[sense]
+        return info[sense]
       end
+    end
+    return ""
+  end
+
+  def describe_detail key: 'default', sense: 'sight', seasons: [], times: [], objs: {}
+    description = []
+    info = get_all_detail(key, objs)
+    if info && !info.empty?
+      description << appropriate_detail_string(key: key, sense: sense, seasons: seasons, times: times, objs: objs, info: info)
       if key != 'default' && info.any? { |p| p.first.start_with?('related-to') }
         # what's the shortest distance from here to 'default'?
         # that's the one we want to select in describing the detail this one is
         # probably most noticably connected to
         #
         graph = get_detail_graph(key, info)
-        path = graph.shortest_path(key, 'default')
+        path = graph.shortest_path(key, 'default').drop(1).concat(['default'])
         # add reference to last component of path
-        if path.length > 1
-          next_info = get_all_detail(path.last)
-          prep = info.keys.select{ |k| k.start_with?('related-to:') && info[k] == path.last }.first.split(/:/).drop(1).first
-          description << "It is"
-          if info["related-to:#{prep}:position"]
-            description << info["related-to:#{prep}:position"]
+        path.take(1).each do |path_bit|
+          next_info = get_all_detail(path_bit)
+          if path_bit != 'default'
+            prep = info.keys.select{ |k| k.start_with?('related-to:') && info[k] == path_bit }.first.split(/:/).drop(1).first
+            description << "It is"
+            if info["related-to:#{prep}:position"]
+              description << info["related-to:#{prep}:position"]
+            end
+            description << prep
+            if next_info["article"]
+              description << next_info["article"]
+            end
+            description << next_info["name"]+"."
           end
-          description << prep
-          if next_info["article"]
-            description << next_info["article"]
-          end
-          description << next_info["name"]+"."
+          #description << appropriate_detail_string(key: path_bit, sense: sense, seasons: seasons, times: times, objs: objs, info: next_info)
+          info = next_info
         end
       end
     end
@@ -221,6 +228,100 @@ module SecondContract::Game::Systems::Details
 
   def detail_jumps key: 'default', objs: {}
     {}
+  end
+
+  def things_between start = 'default', stop = 'default', objs = {}
+    info = get_all_detail(start, objs)
+    if info && !info.empty?
+      graph = get_detail_graph(start, info)
+      return graph.shortest_path(start, stop)
+    else
+      return []
+    end
+  end
+
+  def script_ThingsBetween2 machine, objs
+    startLoc, endLoc = machine.pop(2)
+    if startLoc.nil? || endLoc.nil?
+      []
+    elsif startLoc.item == endLoc.item
+      if startLoc.coord == endLoc.coord
+        []
+      else
+        startLoc.item.things_between(startLoc.coord, endLoc.coord, objs).map { |c|
+          c == 'default' ? startLoc.item : ItemDetail.new(startLoc.item, c)
+        }
+      end
+    else
+      # we need to traverse the graph in the database...
+      []
+    end
+  end
+
+  def script_Describe2 machine, objs
+    sense, ob = machine.pop 2
+    if ob.nil?
+      ""
+    elsif ob.is_a?(Array)
+      ob.compact.collect{ |o| o.describe_detail(objs: objs, sense: sense, times: ['day']) }
+    else
+      ob.describe_detail(objs: objs, sense: sense, times: ['day'])
+    end
+  end
+
+  def script_Describe1 machine, objs
+    ob = machine.pop 1
+    if ob.nil?
+      ""
+    elsif ob.is_a?(Array)
+      ob.flatten.compact.collect{ |o| o.describe_detail(objs: objs, times: ['day']) }.join(" ")
+    else
+      ob.describe_detail(objs: objs, times: ['day'])
+    end
+  end
+
+  def script_Exits1 machine, objs
+    ob = machine.pop 1
+    if ob.nil?
+      {}
+    elsif ob.is_a?(Array)
+      ob.compact.collect { |o| o.detail_exits(objs: objs) }.inject({}) { |h, e| h.merge(e) }
+    else
+      ob.detail_exits(objs: objs)
+    end
+  end
+
+  def script_Enters1 machine, objs
+    ob = machine.pop 1
+    if ob.nil?
+      {}
+    elsif ob.is_a?(Array)
+      ob.compact.collect { |o| o.detail_enters(objs: objs) }.inject({}) { |h, e| h.merge(e) }
+    else
+      ob.detail_enters(objs: objs)
+    end
+  end
+
+  def script_Climbs1 machine, objs
+    ob = machine.pop 1
+    if ob.nil?
+      {}
+    elsif ob.is_a?(Array)
+      ob.compact.collect { |o| o.detail_climbs(objs: objs) }.inject({}) { |h, e| h.merge(e) }
+    else
+      ob.detail_climbs(objs: objs)
+    end
+  end
+
+  def script_Jumps1 machine, objs
+    ob = machine.pop 1
+    if ob.nil?
+      {}
+    elsif ob.is_a?(Array)
+      ob.compact.collect { |o| o.detail_jumps(objs: objs) }.inject({}) { |h, e| h.merge(e) }
+    else
+      ob.detail_jumps(oobjs: bjs)
+    end
   end
 
 protected

@@ -9,7 +9,7 @@ describe Item do
   describe "basic construction" do
     let(:parse) { 
       p = parser.parse_archetype("")
-      p[:traits] = {}
+      p[:mixins] = {}
       p[:name] = 'foo'
       p
     }

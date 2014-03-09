@@ -28,10 +28,16 @@ module SecondContract::Game::Systems::Traits
     traits[name] = nil
   end
 
-  def set_trait name, val
+  def set_trait name, val, objs = {}
     case val
     when Fixnum, Float, String
-      traits[name] = val
+      if validate(:trait, name, val, objs)
+        old_value = get_trait(name)
+        if old_value != val
+          trigger_event("change:trait:#{name}-any", objs.merge({ previous: old_value, value: val }))
+        end
+        traits[name] = val
+      end
     else
       raise "Improper value type for trait"
     end

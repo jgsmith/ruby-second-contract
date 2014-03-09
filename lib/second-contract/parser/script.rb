@@ -24,6 +24,9 @@ module SecondContract::Parser
         :IN      => [ "in", 2, :left ],
         :ABOVE   => [ "above", 2, :left ],
         :ON      => [ "on", 2, :left ],
+        :INTERSECTION => [ "&", 4, :left ],
+        :UNION   => [ "|", 3, :left ],
+        :DIFF    => [ "~", 3, :left ],
       }
 
       @binop_nary = [ :PLUS, :MINUS, :MPY, :DIV, :MOD, :AND, :OR, :DEFAULT ]
@@ -72,13 +75,13 @@ module SecondContract::Parser
     def parse_archetype source
       setup source
 
-      parse_allowing 'archetype', :traits, :qualities, :abilities, :calculations, :data, :archetype, :finally, :reactions
+      parse_allowing 'archetype', :mixins, :qualities, :abilities, :calculations, :data, :archetype, :finally, :reactions, :validators
     end
 
-    def parse_trait source
+    def parse_mixin source
       setup source
 
-      parse_allowing 'trait', :traits, :qualities, :abilities, :calculations, :finally, :reactions
+      parse_allowing 'quality', :mixins, :qualities, :abilities, :calculations, :finally, :reactions, :validators
     end
 
     def parse_verb source
@@ -104,6 +107,7 @@ module SecondContract::Parser
       qualities = []
       calculations = []
       reactions = []
+      validators = []
       data = {}
       ur_name = nil
       finally = nil
@@ -139,16 +143,16 @@ module SecondContract::Parser
         case
         when @scanner.scan(/is\b/)
           _skip_space
-          if !parts.include?(:traits) || @scanner.match?(/[^,\n]+?[ \t\f\r](if|unless)\b/)
+          if !parts.include?(:mixins) || @scanner.match?(/[^,\n]+?[ \t\f\r](if|unless)\b/)
             if parts.include?(:qualities)
               qualities << parse_quality
             else
               error("Qualities are not allowed in #{item_type} definitions", /[\n;]/)
             end
-          elsif parts.include?(:traits)
+          elsif parts.include?(:mixins)
             mixin_list += parse_mixins
           else
-            error("Traits are not allowed in #{item_type} definitions", /[\n;]/)
+            error("Inherited qualities are not allowed in #{item_type} definitions", /[\n;]/)
           end
         when @scanner.scan(/based\s+on\b/)
           _skip_space
@@ -191,11 +195,12 @@ module SecondContract::Parser
 
       info = {}
       info[:archetype] = ur_name if parts.include?(:archetype)
-      info[:traits] = mixin_list if parts.include?(:traits)
+      info[:mixins] = mixin_list if parts.include?(:mixins)
       info[:abilities] = Hash[abilities.compact] if parts.include?(:abilities)
       info[:qualities] = Hash[qualities.compact] if parts.include?(:qualities)
       info[:data] = data if parts.include?(:data)
       info[:calculations] = Hash[calculations.compact] if parts.include?(:calculations)
+      info[:validators] = Hash[validators.compact] if parts.include?(:validators)
       info[:reactions] = Hash[reactions.compact] if parts.include?(:reactions)
       info[:finally] = finally if parts.include?(:finally)
       info
@@ -267,7 +272,7 @@ module SecondContract::Parser
     end
 
     def _nc_name
-      _scan_token(/([a-z][-a-z_A-Z0-9]*(:[a-z][-a-z_A-Z0-9]*)*)/)
+      _scan_token(/([a-z][-a-z_A-Z0-9]*(:[$a-z][-a-z_A-Z0-9]*)*)/)
     end
 
     def _var_name
@@ -347,20 +352,20 @@ module SecondContract::Parser
     end
 
     def parse_list
-      list = [ ]
+      list = []
       _skip_all_space
-      while !@scanner.scan(/\]\)/)
+      if @scanner.scan(/\]\)/)
+        return list
+      end
+      while @scanner.matched != '])'
         if @scanner.eos?
-          error("End of file unexpected in list definition")
+          error("End of file unexpected in list")
           break
         end
-
-        value = parse_expression
-        _expect_eos ','
-        list << value
         _skip_all_space
+        list << parse_expression(/,|\]\)/)
       end
-      [ :LIST, list ]
+      [ :LIST, *list ]
     end
 
     def parse_arg_list
@@ -371,7 +376,7 @@ module SecondContract::Parser
       end
       while @scanner.matched != ')'
         if @scanner.eos?
-          error("End of file unexpected in list definition")
+          error("End of file unexpected in argument list")
           break
         end
         _skip_all_space
@@ -409,8 +414,26 @@ module SecondContract::Parser
       ret
     end
 
+    def parse_list_processing type
+      ret = [ type, parse_term ]
+      if @scanner.scan(/as\b/)
+        _skip_space
+        v = _var_name
+        if !v
+          error("Expected a variable name following 'as'")
+          ret << '$it'
+        else
+          ret << v
+        end
+      else
+        ret << '$a'
+      end
+      ret << parse_expression
+      ret
+    end
+
     def parse_quoted_string delim = '"'
-      @scanner.scan(/([^\\#{delim}]+|\\.)*/)
+      @scanner.scan(/(([^\\#{delim}]+|\\.)*)/)
       ret = [ :STRING, @scanner[1].gsub(/\\./) {|m| 
         case m[1]
         when 'n'
@@ -437,6 +460,12 @@ module SecondContract::Parser
       case
       when @scanner.scan(/(if|unless)\b/)
         ret = parse_if_then_else
+      when @scanner.scan(/mapping\b/)
+        ret = parse_list_processing :MAP
+      when @scanner.scan(/selecting\b/)
+        ret = parse_list_processing :SELECT
+      when @scanner.scan(/foreach\b/)
+        ret = parse_list_processing :LOOP
       when @scanner.scan(/not\b/)
         _skip_all_space
         ret = parse_term
@@ -505,22 +534,22 @@ module SecondContract::Parser
           ret[0] = :FUNCTION
           ret.concat parse_arg_list
         end
-      when @scanner.scan(/is\b/)
-        _skip_all_space
-        match = _nc_name
-        if match.nil?
-          error("Expected a quality for 'is'")
-        else
-          ret = [ :IS, match ]
-        end
-      when @scanner.scan(/can\b/)
-        match = _nc_name
-        if match.nil?
-          error("Expected an ability name for 'can'")
-        else
-          pos = _can_as_pos
-          ret = [ :CAN, pos.to_sym, match ]
-        end
+      # when @scanner.scan(/is\b/)
+      #   _skip_all_space
+      #   match = _nc_name
+      #   if match.nil?
+      #     error("Expected a quality for 'is'")
+      #   else
+      #     ret = [ :IS, match ]
+      #   end
+      # when @scanner.scan(/can\b/)
+      #   match = _nc_name
+      #   if match.nil?
+      #     error("Expected an ability name for 'can'")
+      #   else
+      #     pos = _can_as_pos
+      #     ret = [ :CAN, pos.to_sym, match ]
+      #   end
       when (match = _var_name)
         ret = [ :VAR, match ]
       end
@@ -656,7 +685,7 @@ module SecondContract::Parser
           expressions << [ :SET, [ :VAR, var_name ], parse_expression ]
         when @scanner.scan(/uhoh\b/)
           _skip_space
-          expressions << [ :UHOH, parse_term ]
+          expressions << [ :UHOH, parse_expression ]
         when @scanner.scan(/\[/)
           _skip_all_space
         when @scanner.scan(/(sight|sound|cold|heat|vibration)?:(["'(])/)
@@ -772,6 +801,18 @@ module SecondContract::Parser
       end
     end
 
+    def parse_validator
+      name = _nc_name
+      if @scanner.scan(/with\b/)
+        _skip_all_space
+        exp = parse_expression
+        [ name, exp ]
+      else
+        error("Validation of '#{name}' requires an expression", /[\n;]/)
+        nil
+      end
+    end
+
     def _can_as_pos
       role = "any"
       if @scanner.scan(/as\b/)
@@ -846,7 +887,12 @@ module SecondContract::Parser
       else
         reversed = false
       end
+
       name = _nc_name
+      if op == :CAN
+        pos = _can_as_pos
+        name = "#{name}:#{pos}"
+      end
       ret = [ op, name ]
       if reversed
         ret = [ :NOT, ret ]

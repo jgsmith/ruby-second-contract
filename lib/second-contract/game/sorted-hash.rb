@@ -33,6 +33,6 @@ class SecondContract::Game::SortedHash < Hash
         end
       }
     end
-    key_list.reject { |k| k.nil? }
+    key_list.flatten.compact
   end
 end

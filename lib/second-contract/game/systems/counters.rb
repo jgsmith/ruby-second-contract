@@ -42,21 +42,26 @@ module SecondContract::Game::Systems::Counters
       end
       if validate(:counter, name, val, objs)
         if counters[name].end_with?(":max") || counters[name].end_with?(":debt")
+          trigger_event("change:counter:#{name}-any", { previous: get_counter(name), value: val })
           counters[name] = val
         else
           debt = counters[name + ":debt"]
           diff = val - counters[name]
+          old_value = counters[name]
           if diff < 0
             if debt > 0
               # if we already have debt and we decrease the counter, then we add the
               # decrease to the debt
+              trigger_event("change:counter:#{name}:debt-any", { previous: debt, value: debt - diff })
               counters[name + ":debt"] = debt - diff
             end
             counters[name] = val
           elsif debt > diff
+            trigger_event("change:counter:#{name}:debt-any", { previous: debt, value: debt - diff })
             counters[name + ":debt"] = debt - diff
           elsif debt > 0
             diff -= debt
+            trigger_event("change:counter:#{name}:debt-any", { previous: debt, value: 0 })
             counters[name + ":debt"] = 0
             counters[name] = counters[name] + diff
           else
@@ -66,7 +71,10 @@ module SecondContract::Game::Systems::Counters
           if counters[name] > maxCount
             val = counters[name] - maxCount
             counters[name] = maxCount
-            self.trigger_event(name + ":exceeded", objs)
+            self.trigger_event(name + ":exceeded-any", objs.merge({overage: val}))
+          end
+          if old_value != counters[name]
+            trigger_event("change:counter:#{name}-any", { previous: old_value, value: counters[name] })
           end
         end
       end

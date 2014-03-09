@@ -27,7 +27,7 @@ reacts to post-act:go as actor with
     if MoveTo("normal", Exits(physical:location)[exit]) then
       :"<actor:name> show up somewhere new."
     else
-      :"<actor:name> <try> to head " _ exit _ " but <actor:fail>."
+      :("<actor:name> <try> to head " _ exit _ " but <actor:fail>.")
     end
   end
 
@@ -36,8 +36,12 @@ reacts to post-act:go as actor with
 #
 reacts to pre-act:move:behind as actor with
   if is standing or is crawling then
-    set trait:moving-preposition to "behind"
-    set flag:moving
+    if physical:position & direct.detail:default:allowed-relations:on then
+      set trait:moving-preposition to "behind"
+      set flag:moving
+    else
+      uhoh "You can't be " _ physical:position _ " behind <direct>."
+    end
   else
     uhoh "You must be standing to go somewhere. Perhaps you meant to crawl?"
   end
@@ -47,8 +51,12 @@ reacts to pre-act:move:behind as actor with
 #
 reacts to pre-act:move:on as actor with
   if is standing or is crawling then
-    set trait:moving-preposition to "on"
-    set flag:moving
+    if physical:position & direct.detail:default:allowed-relations:on then
+      set trait:moving-preposition to "on"
+      set flag:moving
+    else
+      uhoh "You can't be " _ physical:position _ " on <direct>."
+    end
   else
     uhoh "You must be standing to go somewhere. Perhaps you meant to crawl?"
   end

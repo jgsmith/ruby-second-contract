@@ -95,8 +95,8 @@ class Archetype
       reactions: {}
     }
     
-    if tree[:traits]
-      tree[:traits].each_pair do |name, trait|
+    if tree[:mixins]
+      tree[:mixins].each_pair do |name, trait|
         @mixins[name] = trait
         [:calculations, :qualities, :abilities].each do |type|
           trait.send(type).keys.each do |k|
@@ -131,15 +131,9 @@ class Archetype
 
   def validated?(prefix, name)
     prefix = prefix.to_sym
-    if @validators.include?(prefix) && @validators[prefix].include?(name)
-      true
-    elsif @mixins.any? { |t| t.last.validated?(prefix, name)}
-      true
-    elsif archetype
-      archetype.validated?(prefix, name)
-    else
-      false
-    end
+    @validators.include?(prefix) && @validators[prefix].include?(name) ||
+    @mixins.any? { |t| t.last.validated?(prefix, name)} ||
+    archetype && archetype.validated?(prefix, name)
   end
 
   def validate(prefix, name, value, objs = {})
@@ -157,15 +151,10 @@ class Archetype
 
   def calculated?(prefix, name)
     prefix = prefix.to_sym
-    if @calculations.include?(prefix) && @calculations[prefix].include?(name)
-      true
-    elsif @mixins.any? { |t| t.last.calculated?(prefix, name) }
-      true
-    elsif archetype
-      archetype.calculated?(prefix, name)
-    else
-      false
-    end
+     @calculations.include?(prefix) && @calculations[prefix].include?(name) ||
+     @mixins.any? { |t| t.last.calculated?(prefix, name) } ||
+     archetype && archetype.calculated?(prefix, name) ||
+     false
   end
 
   def calculate(prefix, name, objs = {})
@@ -203,7 +192,8 @@ class Archetype
   def has_quality?(name)
     @qualities.include?(name) ||
     @mixins.any? {|m| m.last.has_quality?(name) } ||
-    archetype && archetype.has_quality?(name)
+    archetype && archetype.has_quality?(name) ||
+    false
   end
 
   def quality(name, objs = {})
@@ -221,7 +211,8 @@ class Archetype
   def has_ability?(name)
     @abilities.include?(name) ||
     @mixins.any? {|m| m.last.has_ability?(name) } ||
-    archetype && archetype.has_ability?(name)
+    archetype && archetype.has_ability?(name) ||
+    false
   end
 
   def ability(name, objs = {})
@@ -237,15 +228,10 @@ class Archetype
   end
 
   def has_event_handler? evt
-    if @events.include?(evt)
-      true
-    elsif @mixins.any? { |t| t.last.has_event_handler? evt }
-      true
-    elsif archetype
-      archetype.has_event_handler?(evt)
-    else
-      false
-    end
+    @events.include?(evt) ||
+    @mixins.any? { |t| t.last.has_event_handler? evt } ||
+    archetype && archetype.has_event_handler?(evt) ||
+    false
   end
 
   def call_event_handler evt, args, path = ""
@@ -279,6 +265,10 @@ class Archetype
 
   def trigger_event evt, objs
     # we don't run events for archetypes
+  end
+
+  def queue_event evt, objs
+    # we don't queue events for archetypes
   end
 
 protected

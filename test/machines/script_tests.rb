@@ -21,7 +21,6 @@ describe SecondContract::Machine::Script do
   end
 
   describe "#run" do
-    
 
     it "runs a supplied compilation" do
       expect_this([ :PUSH, 1 ]).to eq 1
@@ -108,6 +107,57 @@ reacts to env:msg with
     60
   end
 EOC
+    end
+  end
+
+  describe "#run with an object" do
+    def expect_running(type, name, script)
+      parse = parser.parse_archetype(script)
+      parse[:mixins] = {}
+      parse[:name] = 'foo'
+      object = Item.create(archetype: Archetype.new(parse))
+      expect_this(compiler.compile(parse[type][name]), {this: object })
+    end
+
+    it "allows reading dynamic property names" do
+      expect_running(:calculations, "trait:foo", <<'EOC').to eq 20
+trait:bar:baz starts as 20
+calculates trait:foo with do
+  set $var to "bar:baz"
+  trait:$var
+end
+EOC
+    end
+  end
+
+  describe "#run with an object and mixins" do
+    let(:mixin) { 
+      parse = parser.parse_mixin(<<EOC)
+calculates trait:foo with do
+  set $var to "bar:baz"
+  trait:$var
+end
+EOC
+      parse[:name] = 'foo'
+      parse[:mixins] = {}
+      Quality.new(parse)
+    }
+
+    let(:archetype) {
+      parse = parser.parse_archetype(<<EOC)
+trait:bar:baz starts as 20
+EOC
+      parse[:name] = 'foo'
+      parse[:mixins] = { 'foo' => mixin }
+      Archetype.new(parse)
+    }
+
+    let(:object) {
+      Item.create(archetype: archetype)
+    }
+
+    it "allows reading dynamic property names" do
+      expect(object.trait('foo')).to eq 20
     end
   end
 end

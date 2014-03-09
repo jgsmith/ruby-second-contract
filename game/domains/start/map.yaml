@@ -15,19 +15,13 @@ scenes:
         sight:
           day: >
             The inn radiates age and charm with its oak beam roof and many
-            seafaring momentos secured firmly around the walls. Even the bar
-            is a single thick oak slab, worn and chipped with years of 
-            service to rowdy sailors. An old glass window lets in a little 
-            light from outside. A game room is to the south and a parlor is 
-            to the southeast. A party room is at the bottom of a flight of 
-            stairs.
+            seafaring momentos secured firmly around the walls. A bar sits
+            in the back of the inn away from an old glass window lets in a
+            little light from outside.
           night: >
             The inn radiates age and charm with its oak beam roof and many
-            seafaring momentos secured firmly around the walls. Even the bar 
-            is a single thick oak slab, worn and chipped with years of 
-            service to rowdy sailors. A game room is to the south and a 
-            parlor is to the southeast. A party room is at the bottom of a 
-            flight of stairs."
+            seafaring momentos secured firmly around the walls. A bar sits
+            in the back of the inn.
       menu:
         noun:
           - menu
@@ -211,6 +205,12 @@ scenes:
         article: the
         related-to:
           'in': default
+        allowed-relations:
+          'on':
+            - standing
+            - sitting
+            - crouching
+            - kneeling
         noun:
           - gravel
           - ground
@@ -235,3 +235,39 @@ scenes:
           preposition: 'on'
         article: the
         sight: "The run down inn has seen better days, but it still welcomes travelers."
+  parlor:
+    archetype: std:room
+    details:
+      default:
+        name: parlor
+        article: the
+        sight: This is the parlor where guests can relax with friends and catch up on the latest gossip.  A painting of a summer picnic in the country hangs on the north wall.  The bar area is to the west.
+        exits:
+          northwest:
+            target: start
+            detail: floor
+            preposition: 'on'
+        allowed-relations:
+          'in':
+            - standing
+            - sitting
+            - crouching
+            - kneeling
+      painting:
+        name: painting
+        noun:
+          - painting
+          - picture
+          - picnic
+        related-to:
+          'in': default
+        article: the
+        sight: The painting seems to shine with its own glow despite the gloomy lighting.  The technique looks meticulous.
+      painting-technique:
+        name: technique
+        noun:
+          - technique
+        article: the
+        related-to:
+          'of': painting
+        sight: "On closer inspection, it looks like the painter created the illusion of a summer in the country by putting little dots of paint all over the canvas."

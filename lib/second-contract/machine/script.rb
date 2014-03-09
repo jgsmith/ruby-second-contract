@@ -94,6 +94,16 @@ class SecondContract::Machine::Script
       else
         @ip += 1
       end
+    when :NOT
+      v = @stack.pop
+      @stack.push case v
+                  when Array
+                    v.compact.empty?
+                  when Hash
+                    v.empty?
+                  else
+                    !v
+                  end
     when :THIS_CAN
       ability = @stack.pop
       @stack.push @objects[:this].ability(ability, @objects)
@@ -101,7 +111,9 @@ class SecondContract::Machine::Script
       quality = @stack.pop
       @stack.push @objects[:this].quality(quality, @objects)
     when :UHOH
-      @objects[:this].fail_message = @stack.pop
+      @objects[:this].fail_message = SecondContract::Compiler::Message.new.format(
+        @objects[:this], @message_parser.parse(@stack.pop), @objects
+      )
       @stack.push false
     when :INDEX
       base, idx = @stack.pop(2)
@@ -118,15 +130,25 @@ class SecondContract::Machine::Script
       @ip += 1
       fctn += @code[@ip].to_s
       @ip += 1
-      if @objects[:this].respond_to? fctn
-        @stack.push @objects[:this].send(fctn, self, @objects)
-      else
-        @stack.push nil
-      end
+      @stack.push @objects[:this].try(fctn, self, @objects)
+    when :MAKE_LIST
+      n = @stack.pop
+      @stack.push @stack.pop(n).compact
     when :SUM
       do_series_op 0, :+
     when :CONCAT
       do_series_op "", :+
+    when :SET_UNION
+      n = @stack.pop
+      sets = @stack.pop(n)
+      @stack.push sets.drop(1).inject(Array(sets.first)) { |s, x| s = s | Array(x) }
+    when :SET_INTERSECTION
+      n = @stack.pop
+      sets = @stack.pop(n)
+      @stack.push sets.drop(1).inject(Array(sets.first)) { |s, x| s = s & Array(x) ; s }
+    when :SET_DIFF
+      a, b = @stack.pop(2)
+      @stack.push(Array(a) - Array(b))
     when :DIFFERENCE
       @stack.push @stack.pop - @stack.pop
     when :PRODUCT
@@ -149,10 +171,7 @@ class SecondContract::Machine::Script
       # we want to make sure all of the values are unique
       list = []
       n = @stack.pop
-      n.times do
-        i = @stack.pop
-        list << i if !list.include?(i)
-      end
+      list = @stack.pop(n).uniq
       @stack.push list.length == n
     when :DIV
       d = @stack.pop
@@ -175,27 +194,48 @@ class SecondContract::Machine::Script
     when :SET_THIS_PROP
       name = @stack.pop
       value = @stack.last
-      bits = name.split(/:/, 2)
+      bits = name.split(/:/)
+      bits = [ bits.first, bits.drop(1).map{ |bit|
+        if bit.start_with?('$')
+          @vars[bit[1..-1]]
+        else
+          bit
+        end
+      }.flatten.join(':') ]
       if PROPERTY_TYPES.include?(bits.first)
-        @objects[:this].send("set_" + bits.first, bits.last, value)
+        @objects[:this].send("set_" + bits.first, bits.last, value, @objects)
         if @objects[:this].respond_to?(:"save!")
           @objects[:this].save!
         end
       end
     when :GET_THIS_PROP
       name = @stack.pop
-      bits = name.split(/:/, 2)
+      bits = name.split(/:/)
       if bits.length == 1
         @stack.push @objects[bits.first.to_sym]
       elsif PROPERTY_TYPES.include?(bits.first)
+        bits = [ bits.first, bits.drop(1).map{ |bit|
+          if bit.start_with?('$')
+            @vars[bit[1..-1]]
+          else
+            bit
+          end
+        }.flatten.join(':') ]
         @stack.push @objects[:this].send(bits.first, bits.last, @objects)
       else
         @stack.push nil
       end
     when :REMOVE_PROP
       name = @stack.pop
-      bits = name.split(/:/, 2)
+      bits = name.split(/:/)
       if PROPERTY_TYPES.include?(bits.first)
+        bits = [ bits.first, bits.drop(1).map{ |bit|
+          if bit.start_with?('$')
+            @vars[bit[1..-1]]
+          else
+            bit
+          end
+        }.flatten.join(':') ]
         @objects[:this].send("reset_" + bits.first, bits.last, @objects)
         if @objects[:this].respond_to?(:"save!")
           @objects[:this].save!
@@ -208,8 +248,15 @@ class SecondContract::Machine::Script
     #
     when :GET_THIS_BASE_PROP
       name = @stack.pop
-      bits = name.split(/:/, 2)
+      bits = name.split(/:/)
       if PROPERTY_TYPES.include?(bits.first)
+        bits = [ bits.first, bits.drop(1).map{ |bit|
+          if bit.start_with?('$')
+            @vars[bit[1..-1]]
+          else
+            bit
+          end
+        }.flatten.join(':') ]
         @stack.push @objects[:this].send("get_" + bits.first, bits.last, @objects)
       else
         @stack.push nil
@@ -232,12 +279,19 @@ class SecondContract::Machine::Script
     when :GET_PROP
       name = @stack.pop
       obj = @stack.pop
-      bits = name.split(/:/, 2)
+      bits = name.split(/:/)
       if bits.length == 1
         @stack.push @objects[bits.first.to_sym]
       elsif PROPERTY_TYPES.include?(bits.first)
+        bits = [ bits.first, bits.drop(1).map{ |bit|
+          if bit.start_with?('$')
+            @vars[bit[1..-1]]
+          else
+            bit
+          end
+        }.flatten.join(':') ]
         if obj.is_a?(Array)
-          @stack.push obj.collect{|o| o.send(bits.first, bits.last, @objects) }
+          @stack.push obj.collect{|o| o.send(bits.first, bits.last, @objects) }.flatten
         elsif obj.nil?
           @stack.push nil
         else
@@ -279,9 +333,9 @@ private
       when true, false
         case op
         when :and
-          @stack.push @stack.pop(n).flatten.compact.all? { |i| i }
+          @stack.push @stack.pop(n).flatten.all? { |i| i }
         when :or
-          @stack.push @stack.pop(n).flatten.compact.any? { |i| i }
+          @stack.push @stack.pop(n).flatten.any? { |i| i }
         else
           @stack.pop(n)
           @stack.push false
@@ -304,7 +358,7 @@ private
     if list.include?(nil)
       @stack.push false
     else
-      @stack.push list.zip(list.drop(1)).all?{ |p| p.last.nil? || p.first.send(op, p.last)}
+      @stack.push list.zip(list.drop(1)).all?{ |p| p.last.nil? || p.first.send(op, p.last) || (Array(p.first)&Array(p.last)).length > 0}
     end
   end
 end

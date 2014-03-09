@@ -21,8 +21,11 @@ module SecondContract::Game::Systems::Flags
     inverted ^ !!ret
   end
 
-  def set_flag key, v
+  def set_flag key, v, objs = {}
     key, inverted = check_inversion(key)
+    if flags[key] != !!v^inverted
+      trigger_event("change:flag:#{key}-any", objs.merge({ previous: flags[key], value: !!v ^ inverted }))
+    end
     flags[key] = !!v ^ inverted
   end
 

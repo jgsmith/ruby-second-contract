@@ -67,6 +67,15 @@ class ItemDetail
   end
 
   def physical(key, objs = {})
+    if key == 'location' && coord != 'default'
+      info = @item.get_all_detail(@coord, objs)
+      info.select do |k, v|
+        k.start_with?('related-to:')
+      end.each_pair do |p, pt|
+        return ItemDetail.new(@item, pt, p.split(/:/)[1])
+      end
+      return @item
+    end
     if key == 'environment' && @coord != 'default'
       # what's this detail in in the item?
       details = [ @coord ]
@@ -86,7 +95,7 @@ class ItemDetail
         end
       end
       # if we haven't found an 'in' by now, then we're 'in' the default detail
-      return ItemDetail.new(@item, 'default')
+      return @item
     else
       @item.physical(key, objs)
     end

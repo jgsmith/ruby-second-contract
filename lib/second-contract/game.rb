@@ -18,7 +18,7 @@ class SecondContract::Game
   require 'second-contract/model/item'
   require 'second-contract/model/archetype'
   require 'second-contract/model/domain'
-  require 'second-contract/model/trait'
+  require 'second-contract/model/quality'
   require 'second-contract/game/sorted-hash'
 
 
@@ -56,8 +56,8 @@ class SecondContract::Game
     @binder = SecondContract::IFLib::Sys::Binder.instance
     @archetypes = {}
     @pending_archetypes = SecondContract::Game::SortedHash.new(:archetype)
-    @pending_traits = SecondContract::Game::SortedHash.new(:mixins)
-    @traits = {}
+    @pending_qualities = SecondContract::Game::SortedHash.new(:mixins)
+    @mixins = {}
     @verbs = {}
     @adverbs = {}
     @comm_verbs = {}
@@ -110,20 +110,20 @@ class SecondContract::Game
       @parser.add_adverb(a)
     end
 
-    if !@pending_traits.empty?
+    if !@pending_qualities.empty?
       # now we need a dependency graph so we can order traits properly
-      @pending_traits.sorted_keys.each do |name|
-        info = @pending_traits[name]
+      @pending_qualities.sorted_keys.each do |name|
+        info = @pending_qualities[name]
         info[:name] = name
         regularize_traits info
 
-        item = Trait.new(info)
+        item = Quality.new(info)
 
         if !reported_errors? item
-          @traits[name] = item
+          @mixins[name] = item
         end
 
-        @pending_traits.delete name
+        @pending_qualities.delete name
       end
     end
 
@@ -210,8 +210,8 @@ class SecondContract::Game
         bits = fullPath[@game_dir.length+1..fullPath.length-1].split(File::SEPARATOR)
         if bits.include?('archetypes')
           compile_archetype(fullPath)
-        elsif bits.include?('traits')
-          compile_trait(fullPath)
+        elsif bits.include?('qualities')
+          compile_mixin(fullPath)
         elsif bits.include?('verbs')
           compile_verb(fullPath)
         elsif bits.include?('adverbs')
@@ -308,18 +308,17 @@ class SecondContract::Game
     @archetypes[name]
   end
 
-  def compile_trait fname
+  def compile_mixin fname
     fname = Pathname.new(fname).cleanpath.to_s
     if is_file?(fname)
-      colonName = filename2colonname 'traits', fname
-       
+      colonName = filename2colonname 'qualities', fname
       content = IO.read(fname)
-      tree = @compiler.parse_trait(content)
+      tree = @compiler.parse_mixin(content)
       if tree.nil?
         puts @compiler.errors.yaml
         false
       else
-        @pending_traits[colonName] = tree
+        @pending_qualities[colonName] = tree
         true
       end
     end
@@ -443,6 +442,9 @@ class SecondContract::Game
     if matches_current_event? event
       false
     else
+      puts "Queuing event"
+      #call_event event
+      puts event.to_yaml
       @events.push event
       true
     end
@@ -461,11 +463,14 @@ class SecondContract::Game
   end
 
   def event_beat
-    while !@events.empty?
+    puts "event_beat #{@events.count}" if @events.any?
+    ce = @current_event
+    while @events.any?
       @current_event = @events.shift
+      puts "Handling #{@current_event.type}"
       @current_event.handle
-      @current_event = nil
     end
+    @current_event = ce
   end
 
   def run_event_set set
@@ -604,7 +609,7 @@ private
   end
 
   def find_trait_name path, name
-    find_name @traits, path, name
+    find_name @mixins, path, name
   end
 
   def find_archetype_name path, name
@@ -612,14 +617,14 @@ private
   end
 
   def regularize_traits info
-    mixins = info[:traits].partition{ |t| 
+    mixins = info[:mixins].partition{ |t| 
       info[:qualities].include?(t) || !find_trait_name(info[:name], t).nil?
     }
     mixins.last.each do |t|
       info[:qualities][t] = [ :CONST, 'True' ]
     end
 
-    info[:traits] = mixins.first.inject({}) { |h, k| h[k] = @traits[find_trait_name(info[:name], k)]; h }
+    info[:mixins] = mixins.first.inject({}) { |h, k| h[k] = @mixins[find_trait_name(info[:name], k)]; h }
   end
 
   def reported_errors? item

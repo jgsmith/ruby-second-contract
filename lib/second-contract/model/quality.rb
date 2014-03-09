@@ -1,4 +1,4 @@
-class Trait
+class Quality
   attr_accessor :traits, :skills, :calculations, :qualities, :abilities, :errors
 
   def initialize tree
@@ -15,7 +15,8 @@ class Trait
       calculations: {},
       qualities: {},
       abilities: {},
-      reactions: {}
+      reactions: {},
+      validators: {}
     }
 
     @calculations = compile_functions tree[:calculations]
@@ -24,10 +25,10 @@ class Trait
     @qualities = compile_functions tree[:qualities], hash: false
     @events = compile_functions tree[:reactions], hash: false
 
-    tree[:traits].each_pair do |name, trait|
+    tree[:mixins].each_pair do |name, trait|
       @mixins[name] = trait
 
-      [:calculations, :qualities, :abilities].each do |type|
+      [:calculations, :qualities, :abilities, :validators].each do |type|
         trait.send(type).keys.each do |k|
           if inherited[type].include?(k)
             inherited[type][k] << name
@@ -83,13 +84,8 @@ class Trait
 
   def validated?(prefix, name)
     prefix = prefix.to_sym
-    if @validators.include?(prefix) && @validators[prefix].include?(name)
-      true
-    elsif @mixins.any? { |t| t.last.validated?(prefix, name)}
-      true
-    else
-      false
-    end
+    @validators.include?(prefix) && @validators[prefix].include?(name) ||
+    @mixins.any? { |t| t.last.validated?(prefix, name)}
   end
 
   def validate(prefix, name, value, objs = {})
@@ -105,13 +101,8 @@ class Trait
 
   def calculated?(prefix, name)
     prefix = prefix.to_sym
-    if @calculations.include?(prefix) && @calculations[prefix].include?(name)
-      true
-    elsif @mixins.any? { |t| t.last.calculated?(prefix, name) }
-      true
-    else
-      false
-    end
+    @calculations.include?(prefix) && @calculations[prefix].include?(name) ||
+    @mixins.any? { |t| t.last.calculated?(prefix, name) }
   end
 
   def calculate(prefix, name, objs = {})
@@ -140,13 +131,8 @@ class Trait
   end
 
   def has_event_handler? evt
-    if @events.include?(evt)
-      true
-    elsif @mixins.any? { |t| t.last.has_event_handler? evt }
-      true
-    else
-      false
-    end
+    @events.include?(evt) ||
+    @mixins.any? { |t| t.last.has_event_handler? evt }
   end
 
   def call_event_handler evt, args, path = ""

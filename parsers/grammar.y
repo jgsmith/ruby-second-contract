@@ -43,6 +43,7 @@ rule
   command: ttv
          | btv
          | tv
+         | mv
          | verb_only
 
   communication: comm {
@@ -120,6 +121,10 @@ rule
     })
   }
 
+  mv: movement_verb_only dmp {
+      result = merge_commands(val[0], val[1])
+    }
+
   tv: verb_only dnp {
       result = merge_commands(val[0], val[1])
     }
@@ -191,6 +196,9 @@ rule
                  | BEHIND | BEFORE | IN FRONT OF | BESIDE | CONTAINING | HOLDING
                  | WITH | GUARDING | BLOCKING
 
+  motion_relation: IN TO | ON TO | AGAINST | CLOSE TO | UNDER | NEAR | OVER
+                 | BEHIND | BEFORE | IN FRONT OF | BESIDE | AT
+
   indirect_preposition: FROM | TO | AT | THROUGH
                       | FROM rel_preposition
                       | TO rel_preposition
@@ -198,6 +206,14 @@ rule
   dnp: objects adverbs {
     result = merge_commands(val[1], {
       direct: val[0]
+    })
+  }
+
+  dmp: motion_relation objects adverbs {
+    result = merge_commands(val[2], {
+      direct: val[0].merge({
+        direct_preposition: val[0]
+      })
     })
   }
 
@@ -442,7 +458,7 @@ def failed?
 end
 
 def make_regex list
-  Regexp.new("(" + list.sort{ |a,b| b.length - a.length }.map{|v| v.split(/\s+/).join("\\s+")}.join("|") + ")\\s+")
+  Regexp.new("(" + list.sort{ |a,b| b.length - a.length }.map{|v| v.gsub(/\s+/, "\\s+")}.join("|") + ")\\s+")
 end
 
 def parse(text)

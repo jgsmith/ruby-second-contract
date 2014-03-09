@@ -83,6 +83,10 @@ module SecondContract::Game::Systems::Physicals
       end
     else
       if validate(:physical, key, value, objs)
+        old_value = get_physical(key)
+        if old_value != value
+          trigger_event("change:physical:#{key}-any", objs.merge({previous: old_value, value: value}))
+        end
         physicals[key] = value
       end
     end

@@ -32,6 +32,12 @@ private
         @code << :MARK
         _compile(x)
       end
+    when :LIST
+      parse_tree.drop(1).reverse.each do |p|
+        _compile(p)
+      end
+      _push parse_tree.length - 1
+      @code << :MAKE_LIST
     when :DATA, :INT, :FLOAT, :STRING
       _push parse_tree[1]
     when :CONST
@@ -65,6 +71,12 @@ private
           @code << :GET_PROP
         end
       end
+    when :UNION
+      compile_series :SET_UNION, parse_tree
+    when :INTERSECTION
+      compile_series :SET_INTERSECTION, parse_tree
+    when :DIFF
+      compile_diff_series :SET_UNION, :SET_DIFF, parse_tree
     when :PLUS
       compile_series :SUM, parse_tree
     when :CONCAT
@@ -86,6 +98,9 @@ private
       compile_series :AND, parse_tree
     when :OR
       compile_series :OR, parse_tree
+    when :NOT
+      _compile(parse_tree.last)
+      @code << :NOT
     when :CAN
       _push parse_tree[1]
       @code << :THIS_CAN

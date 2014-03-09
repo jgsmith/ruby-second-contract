@@ -20,6 +20,12 @@ can see
 reacts to pre-move:accept with
   True
 
+reacts to post-move:accept with
+  if physical:location.detail:default:position and not (physical:position & trait:allowed:positions) then
+    set physical:position to physical:location.detail:default:position
+  end
+
+
 ##
 # msg:sight:env
 # 
@@ -64,33 +70,40 @@ reacts to post-scan:brief as actor with
 
     Emit("env:title", ( physical:environment.detail:default:name // "somewhere" ) )
 
+    Emit("env:sight", "You are")
     if physical:position then
-      set $description to "You are " _ physical:position
-    else
-      set $description to "You are"
+      Emit("env:sight", physical:position)
     end
+
+    set $period to ""
+    if physical:location = physical:environment
+      set $period to "."
+    end
+
     if physical:location.detail:default:name
       if physical:location:relation then
-        set $description to $description _ " " _ physical:location:relation
+        Emit("env:sight", physical:location:relation)
       end
       if physical:location.detail:default:name then
         if physical:location.detail:default:article then
-          set $description to $description _ " " _ physical:location.detail:default:article
+          Emit("env:sight", physical:location.detail:default:article)
         end
-        set $description to $description _ " " _ physical:location.detail:default:name
+        Emit("env:sight", physical:location.detail:default:name _ $period)
       else
-        set $description to $description _ " somewhere"
+        Emit("env:sight", "somewhere" _ $period)
       end
     end
     if physical:location <> physical:environment then
-      set $description to $description _ " in"
+      Emit("env:sight", "in")
       if physical:environment.detail:default:article then
-        set $description to $description _ " " _ physical:environment.detail:default:article
+        Emit("env:sight", physical:environment.detail:default:article)
       end
-      set $description to $description _ " " _ physical:environment.detail:default:name
-    end
+      Emit("env:sight", physical:environment.detail:default:name _ ".")
 
-    Emit("env:sight", $description _ ". " _ Describe(physical:environment) )
+      Emit("env:sight", Describe(physical:location.physical:location) )
+    else
+      Emit("env:sight", Describe(physical:location) )
+    end
     Emit("env:exits", ItemList(Keys(Exits(physical:location))))
     # now we can list items/mobs nearby/in the scene
   end

@@ -77,27 +77,15 @@ class Item < ActiveRecord::Base
   end
 
   def validated? prefix, name
-    if archetype.nil?
-      false
-    else
-      archetype.validated?(prefix, name)
-    end
+    archetype && archetype.validated?(prefix, name)
   end
 
   def validate prefix, name, value, objs = {}
-    if archetype.nil?
-      true
-    else
-      archetype.validate(prefix, name, value, objs)
-    end
+    archetype.nil? || archetype.validate(prefix, name, value, objs)
   end
 
   def calculated? prefix, name
-    if archetype.nil?
-      false
-    else
-      archetype.calculated?(prefix, name)
-    end
+    archetype && archetype.calculated?(prefix, name)
   end
 
   def calculate prefix, name, objs = {}
@@ -284,6 +272,12 @@ class Item < ActiveRecord::Base
 
   def trigger_event evt, objs
     SecondContract::Game.instance.call_event(
+      SecondContract::Game::Event.new(self, evt, objs.merge({this: self}))
+    )
+  end
+
+  def queue_event evt, objs
+    SecondContract::Game.instance.queue_event(
       SecondContract::Game::Event.new(self, evt, objs.merge({this: self}))
     )
   end
@@ -660,72 +654,6 @@ class Item < ActiveRecord::Base
     end
   end
 
-  def script_Describe2 machine, objs
-    sense, ob = machine.pop 2
-    if ob.nil?
-      ""
-    elsif ob.is_a?(Array)
-      ob.compact.collect{ |o| o.describe_detail(objs: objs, sense: sense, times: ['day']) }
-    else
-      ob.describe_detail(objs: objs, sense: sense, times: ['day'])
-    end
-  end
-
-  def script_Describe1 machine, objs
-    ob = machine.pop 1
-    if ob.nil?
-      ""
-    elsif ob.is_a?(Array)
-      ob.flatten.compact.collect{ |o| o.describe_detail(objs: objs, times: ['day']) }.join(" ")
-    else
-      ob.describe_detail(objs: objs, times: ['day'])
-    end
-  end
-
-  def script_Exits1 machine, objs
-    ob = machine.pop 1
-    if ob.nil?
-      {}
-    elsif ob.is_a?(Array)
-      ob.compact.collect { |o| o.detail_exits(objs: objs) }.inject({}) { |h, e| h.merge(e) }
-    else
-      ob.detail_exits(objs: objs)
-    end
-  end
-
-  def script_Enters1 machine, objs
-    ob = machine.pop 1
-    if ob.nil?
-      {}
-    elsif ob.is_a?(Array)
-      ob.compact.collect { |o| o.detail_enters(objs: objs) }.inject({}) { |h, e| h.merge(e) }
-    else
-      ob.detail_enters(objs: objs)
-    end
-  end
-
-  def script_Climbs1 machine, objs
-    ob = machine.pop 1
-    if ob.nil?
-      {}
-    elsif ob.is_a?(Array)
-      ob.compact.collect { |o| o.detail_climbs(objs: objs) }.inject({}) { |h, e| h.merge(e) }
-    else
-      ob.detail_climbs(objs: objs)
-    end
-  end
-
-  def script_Jumps1 machine, objs
-    ob = machine.pop 1
-    if ob.nil?
-      {}
-    elsif ob.is_a?(Array)
-      ob.compact.collect { |o| o.detail_jumps(objs: objs) }.inject({}) { |h, e| h.merge(e) }
-    else
-      ob.detail_jumps(oobjs: bjs)
-    end
-  end
-
   def script_Keys1 machine, objs
     ob = machine.pop 1
     if ob.nil?
@@ -735,6 +663,21 @@ class Item < ActiveRecord::Base
     else
       ob.keys.flatten
     end
+  end
+
+  def script_First1 machine, objs
+    ob = machine.pop 1
+    Array(ob).first
+  end
+
+  def script_Rest1 machine, objs
+    ob = machine.pop 1
+    Array(ob).drop(1)
+  end
+
+  def script_Last1 machine, objs
+    ob = machine.pop 1
+    Array(ob).last
   end
 
   def script_ItemList1 machine, objs
@@ -752,7 +695,7 @@ class Item < ActiveRecord::Base
 
   def script_MoveTo2 machine, objs
     dest, klass = machine.pop 2
-    dest = dest.first if dest.is_a?(Array)
+    dest = Array(dest).first
     case dest
     when Item
       do_move(klass, 'in', item, 'default')
@@ -765,7 +708,7 @@ class Item < ActiveRecord::Base
 
   def script_MoveTo3 machine, objs
     dest, prep, klass = machine.pop 3
-    dest = dest.first if dest.is_a?(Array)
+    dest = Array(dest).first
     case dest
     when Item
       # move to being _prep_ Item _default_
@@ -781,7 +724,7 @@ class Item < ActiveRecord::Base
 
   def script_MoveTo4 machine, objs
     msg_in, msg_out, dest, klass = machine.pop 4
-    dest = dest.first if dest.is_a?(Array)
+    dest = Array(dest).first
     case dest
     when Item
       do_move(klass, 'in', item, 'default', msg_out, msg_in)
@@ -794,7 +737,7 @@ class Item < ActiveRecord::Base
 
   def script_MoveTo5 machine, objs
     msg_in, msg_out, dest, prep, klass = machine.pop 5
-    dest = dest.first if dest.is_a?(Array)
+    dest = Array(dest).first
     case dest
     when Item
       # move to being _prep_ Item _default_
