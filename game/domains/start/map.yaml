@@ -123,6 +123,7 @@ scenes:
         sight: >
           The bar is made of a thick oak slab. It looks to be as old as the 
           inn.
+        smell: The bar smells like old varnish and alcohol.
       ceiling:
         noun:
           - ceiling

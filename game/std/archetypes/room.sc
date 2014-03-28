@@ -7,9 +7,6 @@ can move:release
 can not move:receive:magic
 can not move:release:magic
 
-reacts to pre-scan:item as direct with
-  True
-
 can scan:item as direct
 can act:move:behind as direct
 can act:move:on as direct
