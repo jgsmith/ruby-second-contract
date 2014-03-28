@@ -13,6 +13,7 @@ is positional, movable
 
 can scan:brief as actor
 can scan:item as actor
+can act:read:item as actor
 
 can move:accept
 can see
@@ -24,7 +25,6 @@ reacts to post-move:accept with
   if physical:location.detail:default:position and not (physical:position & trait:allowed:positions) then
     set physical:position to physical:location.detail:default:position
   end
-
 
 ##
 # msg:sight:env
@@ -50,6 +50,20 @@ reacts to post-scan:item as actor with
     reset flag:scanning
 
     Emit("env:sight", Describe(direct))
+  end
+
+reacts to pre-act:read:item as actor with do
+  set flag:read-item
+  set flag:reading
+end
+
+reacts to post-act:read:item as actor with
+  if flag:read-item then
+    :"<actor:name> <read> <direct>."
+    reset flag:read-item
+    reset flag:reading
+
+    Emit("env:sight", direct.detail:default:read)
   end
 
 ##

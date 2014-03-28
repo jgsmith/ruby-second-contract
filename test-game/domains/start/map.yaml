@@ -14,7 +14,16 @@ scenes:
           'in': default
         name: bar
         article: the
+        noun:
+          - bar
         sight: The bar is polished.
+      writing:
+        related-to:
+          'on': bar
+        name: writing
+        article: the
+        noun:
+          - writing
   yard:
     archetype: std:room
     details:

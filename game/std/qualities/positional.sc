@@ -17,7 +17,7 @@ is kneeling if physical:position = "kneeling"
 is sitting if physical:position = "sitting"
 is crouching if physical:position = "crouching"
 
-validates trait:position with
+validates physical:position with
   if value & trait:allowed:positions then
     True
   else

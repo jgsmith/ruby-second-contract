@@ -557,11 +557,11 @@ class Item < ActiveRecord::Base
     loc_coord = loc.coord
     
 
-    if !loc_item.ability("move:release:#{klass}", {this: loc_item})
+    if !loc_item.ability("move:release:#{klass}", {this: loc_item, actor: self})
       return false
     end
 
-    if !target_item.ability("move:receive:#{klass}", {this: target_item})
+    if !target_item.nil? && !target_item.ability("move:receive:#{klass}", {this: target_item, actor: self})
       return false
     end
 
@@ -573,11 +573,11 @@ class Item < ActiveRecord::Base
       return false
     end
 
-    if !target_item.trigger_event("pre-move:receive:#{klass}", {this: target_item, coord: target_coord, relation: target_prep, actor: self })
+    if !target_item.nil? && !target_item.trigger_event("pre-move:receive:#{klass}", {this: target_item, coord: target_coord, relation: target_prep, actor: self })
       return false
     end
 
-    if !trigger_event("pre-move:accept:#{klass}", {this: target_item, dest: target_item, coord: target_coord, relation: target_prep })
+    if !trigger_event("pre-move:accept:#{klass}", {this: self, dest: target_item, coord: target_coord, relation: target_prep })
       return false
     end
 
@@ -606,30 +606,35 @@ class Item < ActiveRecord::Base
     loc_item.reload
 
     # now make the connection to the new scene
-    target_relationships.each(&:"destroy!")
+    target_relationships.clear
     self.reload
-    r = target_relationships.build({
-      target: target_item,
-      preposition: target_prep.to_sym
-    })
-    case target_coord
-    when String
-      r.detail = target_coord
-    when Fixnum
-      r.x = target_coord
-    when Array
-      r.x = target_coord.first
-      r.y = target_coord.last
+    if !target_item.nil?
+      r = target_relationships.build({
+        target: target_item,
+        preposition: target_prep.to_sym
+      })
+      case target_coord
+      when String
+        r.detail = target_coord
+      when Fixnum
+        r.x = target_coord
+      when Array
+        r.x = target_coord.first
+        r.y = target_coord.last
+      end
+      r.save!
+      self.reload
+      target_item.reload
     end
-    r.save!
-    self.reload
-    target_item.reload
 
     loc_item.trigger_event("post-move:release:#{klass}", {this: loc_item, coord: loc_coord, relation: loc_prep, actor: self, msg: msg_out})
 
     trigger_event("post-move:accept:#{klass}", {this: self, dest: target_item, coord: target_coord, relation: target_prep })
 
-    target_item.trigger_event("post-move:receive:#{klass}", {this: target_item, coord: target_coord, relation: target_prep, actor: self, msg: msg_in })
+    if !target_item.nil?
+      target_item.trigger_event("post-move:receive:#{klass}", {this: target_item, coord: target_coord, relation: target_prep, actor: self, msg: msg_in })
+    end
+
     true
   end
 
@@ -770,6 +775,35 @@ class Item < ActiveRecord::Base
     end
     if objs[:instrument]
       pro += objs[:instrument].first.trait(skill_aid_for(skill))
+    end
+  end
+
+  ##
+  # Create(archetype)
+  #
+  def script_Create1 machine, objs
+    nom = machine.pop 1
+    nom = SecondContract::Game.instance.find_archetype_name(archetype_name, nom)
+    arch = SecondContract::Game.instance.get_archetype(nom)
+    if arch.nil?
+      obj = nil
+    else
+      obj = Item.create(archetype_name: nom)
+      obj.do_move('create', :near, self, 'default', '', '')
+    end
+    @stack.push obj
+  end
+
+  ##
+  # Destruct()
+  #
+  def script_Destruct0 machine, objs
+    do_move('destroy', nil, nil, nil, '', '')
+    objects = sources.all
+    while objects.any?
+      obj = objects.pop
+      objects.push obj.sources
+      obj.source_relationships.clear
     end
   end
 end

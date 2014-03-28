@@ -581,6 +581,14 @@ class SecondContract::Game
     end
   end
 
+  def find_trait_name path, name
+    find_name @mixins, path, name
+  end
+
+  def find_archetype_name path, name
+    find_name @archetypes, path, name
+  end
+
 private
 
   def is_file? fname
@@ -606,14 +614,6 @@ private
       end
     end
     nil
-  end
-
-  def find_trait_name path, name
-    find_name @mixins, path, name
-  end
-
-  def find_archetype_name path, name
-    find_name @archetypes, path, name
   end
 
   def regularize_traits info

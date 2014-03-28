@@ -20,15 +20,15 @@ class SecondContract::IFLib::Data::Command
   end
 
   def add_direct(d)
-    @direct << d
+    @direct.concat unwind_noun_phrase(d)
   end
 
   def add_indirect(i)
-    @indirect << i
+    @indirect.concat unwind_noun_phrase(i)
   end
 
   def add_instrument(i)
-    @instrument << i
+    @instrument.concat unwind_noun_phrase(i)
   end
 
   def add_evocation(e)
@@ -89,7 +89,7 @@ class SecondContract::IFLib::Data::Command
         else
           direct_obs = SecondContract::IFLib::Sys::Binder.instance.bind_direct(actor, verb_obj.direct_types, @direct)
           direct_obs = direct_obs.objects.select { |ob|
-            ob.is_a?(ItemDetail) || verb_obj.actions.all?{ |act| ob.ability("#{act}:direct", {this: ob, actor: actor})}
+            verb_obj.actions.all?{ |act| ob.ability("#{act}:direct", {this: ob, actor: actor})}
           }
           if direct_obs.empty?
             next
@@ -100,7 +100,7 @@ class SecondContract::IFLib::Data::Command
       if !@indirect.empty?
         indirect_obs = SecondContract::IFLib::Sys::Binder.instance.bind_indirect(actor, verb_obj.indirect_types, @indirect, direct_obs)
         indirect_obs = indirect_obs.objects.select { |ob|
-          ob.is_a?(ItemDetail) || verb_obj.actions.all?{ |act| ob.ability("#{act}:indirect", {this: ob, actor: actor, direct: direct_obs})}
+          verb_obj.actions.all?{ |act| ob.ability("#{act}:indirect", {this: ob, actor: actor, direct: direct_obs})}
         }
         if indirect_obs.empty?
           next
@@ -171,4 +171,34 @@ class SecondContract::IFLib::Data::Command
     end
     bits.join(" ") + "."
   end
+
+  def unwind_noun_phrase(phrase)
+    # { quantifier: {}, adjectives: [], nominal: 'writing',
+    #   relation: {
+    #     preposition: :behind,
+    #     target: { quantifier: {}, adjectives: [], nominal: 'bar'
+    #   }
+    # }
+    # { article: "the", preposition: nil, adjectives: [], nominal: 'bar' },
+    # { article: "the", preposition: :on, adjectives: [], nominal: 'writing' },
+
+    if phrase.is_a?(Array)
+      phrase.inject([]) { |ps, p| ps.concat(unwind_noun_phrase(p)); ps }
+    else
+
+      elements = []
+      while phrase.present? && phrase[:relation].present?
+        bit = phrase.merge({preposition: phrase[:relation][:preposition]})
+        bit.delete(:relation)
+        elements << bit
+        phrase = phrase[:relation][:target]
+      end
+
+      if phrase.present?
+        elements << phrase
+      end
+      [ elements.reverse ]
+    end
+  end
+
 end

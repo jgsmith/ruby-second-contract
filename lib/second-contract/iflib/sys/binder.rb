@@ -61,8 +61,6 @@ class SecondContract::IFLib::Sys::Binder
     nil
   end
 
-private
-
   def match_object_in_array(phrases, ob_list, type, actor)
     context = actor.binder_context
     if context.nil?
@@ -86,7 +84,7 @@ private
       end
       omatch.replace_objects(result)
       if result.success?
-        sources_now = result.objects
+        sources = result.objects
       else
         omatch.status = result.status
         break
@@ -107,6 +105,7 @@ private
   def _match_object_in_array(prep, input, ob_list, type, actor)
     context = actor.binder_context
     omatch = SecondContract::IFLib::Data::Match.new
+    prep = Array(prep)
 
     #
     # given the ob_list, prep, and input, we want all of the items with the "prep"
@@ -142,8 +141,9 @@ private
     sources = []
 
     if type.include?(:in_inventory)
-      sources = [ actor ]
-    elsif type.include?(:distant)
+      sources << actor
+    end
+    if type.include?(:distant)
       env = actor
       while env && !sources.include?(env)
         sources << env

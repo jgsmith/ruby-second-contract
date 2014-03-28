@@ -115,6 +115,14 @@ class ItemDetail
     @item.call_event_handler(evt, args.merge({detail: @coord}))
   end
 
+  def quality name, objs = {}
+    @item.quality(name, objs.merge({detail: @coord}))
+  end
+
+  def ability name, objs = {}
+    @item.ability(name, objs.merge({detail: @coord}))
+  end
+
   ###
   ### Parser support - only in items
   ###

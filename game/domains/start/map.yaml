@@ -26,6 +26,8 @@ scenes:
         noun:
           - menu
         article: the
+        related-to:
+          behind: bar
         sight: A menu hangs behind the bar. Perhaps you should read it.
         read: |
           /--------------------------------------------\\
