@@ -1,3 +1,17 @@
+# == Schema Information
+#
+# Table name: item_relationships
+#
+#  id          :integer          not null, primary key
+#  source_id   :integer
+#  target_id   :integer
+#  preposition :integer          default(0)
+#  detail      :string(255)      default("default")
+#  x           :integer
+#  y           :integer
+#  hidden      :boolean          default(FALSE), not null
+#
+
 class ItemRelationship < ActiveRecord::Base
   belongs_to :source, class_name: "Item", inverse_of: :target_relationships
   belongs_to :target, class_name: "Item", inverse_of: :source_relationships

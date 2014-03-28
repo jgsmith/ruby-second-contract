@@ -1,3 +1,11 @@
+# == Schema Information
+#
+# Table name: domains
+#
+#  id   :integer          not null, primary key
+#  name :string(255)
+#
+
 class Domain < ActiveRecord::Base
   has_many :items
 
