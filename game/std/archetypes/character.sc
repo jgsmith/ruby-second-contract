@@ -9,7 +9,7 @@ details:
       - simple
 ---
 based on std:item
-is positional, movable
+is positional, movable, gendered
 is reading, smelling, viewing
 
 can scan:brief as actor
