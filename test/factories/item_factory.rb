@@ -1,3 +1,22 @@
+# == Schema Information
+#
+# Table name: items
+#
+#  id             :integer          not null, primary key
+#  archetype_name :string(255)      not null
+#  traits         :text             default("--- {}\n")
+#  skills         :text             default("--- {}\n")
+#  stats          :text             default("--- {}\n")
+#  details        :text             default("--- {}\n")
+#  physicals      :text             default("--- {}\n")
+#  counters       :text             default("--- {}\n")
+#  resources      :text             default("--- {}\n")
+#  flags          :text             default("--- {}\n")
+#  domain_id      :integer
+#  name           :string(64)
+#  transient      :boolean          default(FALSE), not null
+#
+
 #
 # Item
 #
