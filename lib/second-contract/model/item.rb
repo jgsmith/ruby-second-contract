@@ -1,3 +1,22 @@
+# == Schema Information
+#
+# Table name: items
+#
+#  id             :integer          not null, primary key
+#  archetype_name :string(255)      not null
+#  traits         :text             default("--- {}\n")
+#  skills         :text             default("--- {}\n")
+#  stats          :text             default("--- {}\n")
+#  details        :text             default("--- {}\n")
+#  physicals      :text             default("--- {}\n")
+#  counters       :text             default("--- {}\n")
+#  resources      :text             default("--- {}\n")
+#  flags          :text             default("--- {}\n")
+#  domain_id      :integer
+#  name           :string(64)
+#  transient      :boolean          default(FALSE), not null
+#
+
 ##
 # Objects are items in the game of any type that inherit from an
 # archetype. Archetypes are defined outside the database, so they
@@ -535,6 +554,9 @@ class Item < ActiveRecord::Base
 # N.B.: These are only called when this object is changing environments,
 # not when moving within a scene, on the same path, or in the same terrain.
 #
+  def do_move_to_location(klass, target_loc, msg_out = nil, msg_in = nil)
+    do_move(klass, target_loc.preposition || 'in', target_loc.item, target_loc.coord, msg_out, msg_in)
+  end
 
   def do_move(klass, target_prep, target_item, target_coord, msg_out = nil, msg_in = nil)
     config = SecondContract::Game.instance.config
@@ -547,21 +569,20 @@ class Item < ActiveRecord::Base
       end
     end
     # where is this item now?
+
     loc = get_location
-    if loc.nil?
-      return false
-    end
-    
-    loc_item = loc.item
-    loc_prep = loc.preposition
-    loc_coord = loc.coord
-    
 
-    if !loc_item.ability("move:release:#{klass}", {this: loc_item, actor: self})
+    if loc.present?
+      loc_item = loc.item
+      loc_prep = loc.preposition
+      loc_coord = loc.coord
+    end
+
+    if loc_item.present? && !loc_item.ability("move:release:#{klass}", {this: loc_item, actor: self})
       return false
     end
 
-    if !target_item.nil? && !target_item.ability("move:receive:#{klass}", {this: target_item, actor: self})
+    if target_item.present? && !target_item.ability("move:receive:#{klass}", {this: target_item, actor: self})
       return false
     end
 
@@ -569,11 +590,11 @@ class Item < ActiveRecord::Base
       return false
     end
 
-    if !loc_item.trigger_event("pre-move:release:#{klass}", {this: loc_item, coord: loc_coord, relation: loc_prep, actor: self })
+    if loc.present? && !loc_item.trigger_event("pre-move:release:#{klass}", {this: loc_item, coord: loc_coord, relation: loc_prep, actor: self })
       return false
     end
 
-    if !target_item.nil? && !target_item.trigger_event("pre-move:receive:#{klass}", {this: target_item, coord: target_coord, relation: target_prep, actor: self })
+    if target_item.present? && !target_item.trigger_event("pre-move:receive:#{klass}", {this: target_item, coord: target_coord, relation: target_prep, actor: self })
       return false
     end
 
@@ -582,33 +603,35 @@ class Item < ActiveRecord::Base
     end
 
     # now disconnect from everything in this scene that is connected to us but not part of our inventory
-    source_relationships.reject{ |t| [:in, :worn_by, :held_by, :on].include?(t.preposition) }.each do |r|
-      r.target = loc_item
-      r.preposition = loc_prep.to_sym
-      case loc_coord
-      when String
-        r.detail = loc_coord
-        r.x = nil
-        r.y = nil
-      when Fixnum
-        r.detail = nil
-        r.x = loc_coord
-        r.y = nil
-      when Array
-        r.detail = nil
-        r.x = loc_coord.first
-        r.y = loc_coord.last
+    if loc_item.present?
+      source_relationships.reject{ |t| [:in, :worn_by, :held_by, :on].include?(t.preposition) }.each do |r|
+        r.target = loc_item
+        r.preposition = loc_prep.to_sym
+        case loc_coord
+        when String
+          r.detail = loc_coord
+          r.x = nil
+          r.y = nil
+        when Fixnum
+          r.detail = nil
+          r.x = loc_coord
+          r.y = nil
+        when Array
+          r.detail = nil
+          r.x = loc_coord.first
+          r.y = loc_coord.last
+        end
+        r.save
+        r.source.reload
       end
-      r.save
-      r.source.reload
+      self.reload
+      loc_item.reload
     end
-    self.reload
-    loc_item.reload
 
     # now make the connection to the new scene
     target_relationships.clear
     self.reload
-    if !target_item.nil?
+    if target_item.present?
       r = target_relationships.build({
         target: target_item,
         preposition: target_prep.to_sym
@@ -627,11 +650,13 @@ class Item < ActiveRecord::Base
       target_item.reload
     end
 
-    loc_item.trigger_event("post-move:release:#{klass}", {this: loc_item, coord: loc_coord, relation: loc_prep, actor: self, msg: msg_out})
+    if loc_item.present?
+      loc_item.trigger_event("post-move:release:#{klass}", {this: loc_item, coord: loc_coord, relation: loc_prep, actor: self, msg: msg_out})
+    end
 
     trigger_event("post-move:accept:#{klass}", {this: self, dest: target_item, coord: target_coord, relation: target_prep })
 
-    if !target_item.nil?
+    if target_item.present?
       target_item.trigger_event("post-move:receive:#{klass}", {this: target_item, coord: target_coord, relation: target_prep, actor: self, msg: msg_in })
     end
 
@@ -705,7 +730,7 @@ class Item < ActiveRecord::Base
     when Item
       do_move(klass, 'in', item, 'default')
     when ItemDetail
-      do_move(klass, dest.preposition || 'in', dest.item, dest.coord)
+      do_move_to_location(klass, dest)
     else
       false
     end
@@ -734,7 +759,7 @@ class Item < ActiveRecord::Base
     when Item
       do_move(klass, 'in', item, 'default', msg_out, msg_in)
     when ItemDetail
-      do_move(klass, dest.preposition || 'in', dest.item, dest.detail, msg_out, msg_in)
+      do_move_to_location(klass, dest, msg_out, msg_in)
     else
       false
     end

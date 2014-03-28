@@ -518,18 +518,28 @@ class SecondContract::Game
   end
 
   ## Character/User related methods
-  def user_exists? email
-    User.where(:email => email).count == 1
-  end
+  def get_start_location
+    start_info = @config['start']
+    if start_info.nil? || start_info['target'].nil?
+      puts "*** No start location information"
+      return nil
+    end
+    start_env_bits = start_info['target'].split(/:/, 2)
+    if @domains[start_env_bits.first].nil?
+      puts "*** Start domain is not found"
+      return nil
+    end
+    start_env = @domains[start_env_bits.first].get_item(start_env_bits.last)
+    if start_env.nil?
+      puts "*** Start environment is not found"
+      return nil
+    end
 
-  def set_user_password email, passwd
-    user = User.where(:email => email).first_or_create
-    user.password = passwd
-    user.save!
-  end
-
-  def authenticate_user email, passwd
-    User.where(:email => email, :password => passwd).first
+    ItemDetail.new(
+      start_env,
+      (start_info['detail'] || 'default'),
+      (start_info['preposition'] || 'in')
+    )
   end
 
   def character_exists? name

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140219132000) do
+ActiveRecord::Schema.define(version: 20140328133758) do
 
   create_table "characters", force: true do |t|
     t.string  "name"
@@ -34,14 +34,14 @@ ActiveRecord::Schema.define(version: 20140219132000) do
 
   create_table "items", force: true do |t|
     t.string  "archetype_name",                                 null: false
-    t.string  "traits",                    default: "--- {}\n"
-    t.string  "skills",                    default: "--- {}\n"
-    t.string  "stats",                     default: "--- {}\n"
-    t.string  "details",                   default: "--- {}\n"
-    t.string  "physicals",                 default: "--- {}\n"
-    t.string  "counters",                  default: "--- {}\n"
-    t.string  "resources",                 default: "--- {}\n"
-    t.string  "flags",                     default: "--- {}\n"
+    t.text    "traits",                    default: "--- {}\n"
+    t.text    "skills",                    default: "--- {}\n"
+    t.text    "stats",                     default: "--- {}\n"
+    t.text    "details",                   default: "--- {}\n"
+    t.text    "physicals",                 default: "--- {}\n"
+    t.text    "counters",                  default: "--- {}\n"
+    t.text    "resources",                 default: "--- {}\n"
+    t.text    "flags",                     default: "--- {}\n"
     t.integer "domain_id"
     t.string  "name",           limit: 64
     t.boolean "transient",                 default: false,      null: false
@@ -50,8 +50,8 @@ ActiveRecord::Schema.define(version: 20140219132000) do
   create_table "users", force: true do |t|
     t.string "name"
     t.string "email"
-    t.string "password"
-    t.text   "settings", default: "--- {}\n", null: false
+    t.string "password_hash"
+    t.text   "settings",      default: "--- {}\n", null: false
   end
 
 end

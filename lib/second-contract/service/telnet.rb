@@ -241,7 +241,7 @@ class SecondContract::Service::Telnet < EventMachine::Connection
     if !str || str == ""
       send_message("\nPerhaps another time.\n")
       nil
-    elsif game.user_exists?(str)
+    elsif User.user_exists?(str)
       send_message("\nThat user already has an account.")
       nil
     else
@@ -255,7 +255,7 @@ class SecondContract::Service::Telnet < EventMachine::Connection
     if !str || str == ""
       send_message("\nPerhaps another time.\n")
       nil
-    elsif game.user_exists?(@info[:email])
+    elsif User.user_exists?(@info[:email])
       send_message("\nThat user already has an account.")
       nil
     else
@@ -272,12 +272,12 @@ class SecondContract::Service::Telnet < EventMachine::Connection
     elsif @info[:newpassword] != str
       send_message("\nThose passwords don't match. Please come back and try again another time.")
       nil
-    elsif game.user_exists?(@info[:email])
+    elsif User.user_exists?(@info[:email])
       send_message("\nThat user already has an account.")
       nil
     else
-      game.set_user_password(@info[:email], @info[:newpassword])
-      @user = game.authenticate_user(@info[:email], @info[:newpassword])
+      User.set_user_password(@info[:email], @info[:newpassword])
+      @user = User.authenticate_user(@info[:email], @info[:newpassword])
       send_message("\nNow we'll walk you through creating your first character.")
       send_message("\n\nWhat name do you wish? ")
       :new_character
@@ -288,7 +288,7 @@ class SecondContract::Service::Telnet < EventMachine::Connection
     if !str || str == ""
       send_message("\nPerhaps another time.\n")
       nil
-    elsif game.character_exists?(str)
+    elsif Character.character_exists?(str)
       send_message("\nA character by that name already exists.\n\nWhat name do you wish? ")
       :new_character
     else
@@ -358,7 +358,7 @@ class SecondContract::Service::Telnet < EventMachine::Connection
   end
 
   def login str
-    @user = game.authenticate_user(@info[:email], str)
+    @user = User.authenticate_user(@info[:email], str)
     if !@user
       send_message("\nBad password.\n")
       nil
@@ -426,7 +426,7 @@ class SecondContract::Service::Telnet < EventMachine::Connection
     str.downcase!
     if !str || str == ""
       :nil
-    elsif game.user_exists?(str)
+    elsif User.user_exists?(str)
       send_message("Password: ")
       @info[:email] = str
       [ :login, :NOECHO ]
@@ -441,7 +441,7 @@ class SecondContract::Service::Telnet < EventMachine::Connection
   end
 
   def enter_game
-    if SecondContract::Game.instance.enter_game(@character.item, self)
+    if game.enter_game(@character.item, self)
       emit_queued_info
       send_message("> ")
       true
@@ -451,7 +451,7 @@ class SecondContract::Service::Telnet < EventMachine::Connection
   end
 
   def create_character info
-    SecondContract::Game.instance.create_character(@user, info)
+    Character.create_character(@user, info)
   end
 
   def unbind
