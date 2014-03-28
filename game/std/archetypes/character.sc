@@ -9,11 +9,10 @@ details:
       - simple
 ---
 based on std:item
-is positional, movable
+is positional, movable, reading
 
 can scan:brief as actor
 can scan:item as actor
-can act:read:item as actor
 
 can move:accept
 can see
@@ -50,20 +49,6 @@ reacts to post-scan:item as actor with
     reset flag:scanning
 
     Emit("env:sight", Describe(direct))
-  end
-
-reacts to pre-act:read:item as actor with do
-  set flag:read-item
-  set flag:reading
-end
-
-reacts to post-act:read:item as actor with
-  if flag:read-item then
-    :"<actor:name> <read> <direct>."
-    reset flag:read-item
-    reset flag:reading
-
-    Emit("env:sight", direct.detail:default:read)
   end
 
 ##
