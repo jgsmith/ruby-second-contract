@@ -479,11 +479,11 @@ module SecondContract::Parser
         l = @scanner[1]
         case l
         when '['
-          r = ']'
+          r = '\\]'
         when '('
-          r = ')'
+          r = '\\)'
         when '{'
-          r = '}'
+          r = '\\}'
         when '<'
           r = '>'
         else
@@ -494,7 +494,7 @@ module SecondContract::Parser
         if !@scanner.scan(/#{r}/)
           error("Unterminated word list found", /[;\n]/)
         end
-        ret = [ :LIST, s.split(/\s+/) ]
+        ret = [ :LIST ].concat s.split(/\s+/).map { |k| [ :STRING, k ] }
       when @scanner.scan(/is\b/)
         ret = _is_can_q :IS
       when @scanner.scan(/can\b/)
