@@ -3,4 +3,4 @@ flags:
   living: false
 ---
 
-is possibly-living
+is possibly-living, readable
