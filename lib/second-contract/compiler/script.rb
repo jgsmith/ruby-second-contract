@@ -38,7 +38,7 @@ private
       end
       _push parse_tree.length - 1
       @code << :MAKE_LIST
-    when :DATA, :INT, :FLOAT, :STRING
+    when :DATA, :INT, :FLOAT, :STRING, :UNITS
       _push parse_tree[1]
     when :CONST
       _push SecondContract::Game.instance.constants[parse_tree[1]]

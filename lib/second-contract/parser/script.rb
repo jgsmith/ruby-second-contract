@@ -1,6 +1,7 @@
 module SecondContract::Parser
   class Script
     require 'yaml'
+    require 'ruby-units'
 
     def initialize 
       @binops = {
@@ -502,6 +503,8 @@ module SecondContract::Parser
         ret = parse_dictionary
       when @scanner.scan(/\(\[/)
         ret = parse_list
+      when @scanner.scan(/\(\s*((\d+(\.\d*)?|\.\d+)\s*[a-z][a-z\/^0-9]*)\s*\)/i)
+        ret = [ :UNITS, Unit(@scanner[1].downcase) ]
       when @scanner.scan(/\(/)
         _skip_all_space
         ret = parse_expression(/\)/)
