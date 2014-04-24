@@ -39,5 +39,5 @@ The various Ruby classes and modules are organized roughly following the
 scheme established in the DGD Kernel library:
 
 - SecondContract::IFLib - classes dealing with the interactive fiction component
- -- Data:: - simple data-oriented classes
- -- Sys:: - singleton classes providing services
+  - Data:: - simple data-oriented classes
+  - Sys:: - singleton classes providing services
